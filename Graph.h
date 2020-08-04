@@ -3,7 +3,6 @@
 
 #include <set> 
 #include <string>
-#include <map>
 
 /**
 * Class representing a graph containing vertices and edges.
@@ -11,7 +10,7 @@
 class Graph
 {
     std::set<std::string> vertices;
-    std::map<std::string, std::string> edges;
+    std::set<std::pair<std::string, std::string>> edges;
 
 public:
     /**
@@ -19,7 +18,7 @@ public:
      * @param vertices The vertices of the graph.
      * @param edges The edges of the graph.
      */
-    explicit Graph(const std::set<std::string>& vertices, const std::map<std::string, std::string>& edges);
+    explicit Graph(const std::set<std::string>& vertices, const std::set<std::pair<std::string, std::string>>& edges);
 
     /**
     * Copy c'tor.

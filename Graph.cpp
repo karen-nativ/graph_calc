@@ -6,11 +6,11 @@
 using namespace std;
 
 /**
-* Creates a map of all possible edges between given vertices.
+* Creates a set of all possible edges between given vertices.
 * @param vertices The vertices from which we create all edges.
-* @return A map of edges of the full graph of vertices
+* @return A set of edges of the full graph of vertices
 */
-static map<string, string> createFullEdges(set<string> vertices);
+static set<pair<string, string>> createFullEdges(set<string> vertices);
 
 /**
 * Validates that the given string follows requirements for vertice names.
@@ -37,12 +37,27 @@ public:
     }
 };
 
-Graph::Graph(const set<string>& new_vertices, const map<string, string>& new_edges) :
-    vertices(new_vertices), edges(new_edges)
+Graph::Graph(const set<string>& new_vertices, const set<pair<string, string>>& new_edges)
 {
-    //remove_if(vertices.begin(), vertices.end(), !(isValidName));
+    /* Use of algorithm
+        copy_if(new_vertices.begin(), new_vertices.end(), vertices.begin(), isValidName);
+        ValidEdge isValid(vertices);
+        copy_if(new_edges.begin(), new_edges.end(), edges.begin(), isValid);
+    */
+
+    for(const string& new_vertice : new_vertices) {
+        if(isValidName(new_vertice)) {
+            vertices.insert(new_vertice);
+        }
+    }
     ValidEdge isValid(vertices);
-    //remove_if(edges.begin(), edges.end(), isValid);
+
+    for(const pair<string, string>& new_edge : new_edges) {
+        if(isValid(new_edge)) {
+            edges.insert(new_edge);
+        }
+    }
+
 }
 
 Graph::Graph(const Graph& graph) : vertices(graph.vertices), edges(graph.edges)
@@ -52,9 +67,16 @@ Graph::Graph(const Graph& graph) : vertices(graph.vertices), edges(graph.edges)
 Graph Graph::operator-(const Graph& graph) const
 {
     set<string> difference_vertices;
-    map<string, string> difference_edges;
-    set_difference(vertices.begin(), vertices.end(), graph.vertices.begin(),
+    set<pair<string, string>> difference_edges;
+    /* Use of algorithm
+       set_difference(vertices.begin(), vertices.end(), graph.vertices.begin(),
         graph.vertices.end(), inserter(difference_vertices, difference_vertices.begin()));
+    */
+    for(const string& vertice : vertices) {
+        if(graph.vertices.find(vertice) == graph.vertices.end()) {
+            difference_vertices.insert(vertice);
+        }
+    }
 
     for(const pair<string, string>& edge : edges) {
         ValidEdge isValid(difference_vertices);
@@ -68,22 +90,41 @@ Graph Graph::operator-(const Graph& graph) const
 
 Graph Graph::operator!() const
 {
-    map<string, string> all_edges = createFullEdges(vertices);
-    map<string, string> complement_edges;
-    set_difference(all_edges.begin(), all_edges.end(), edges.begin(),
+    set<pair<string, string>> all_edges = createFullEdges(vertices);
+    set<pair<string, string>> complement_edges;
+    /* Use of algorithm
+        set_difference(all_edges.begin(), all_edges.end(), edges.begin(),
         edges.end(), inserter(all_edges, complement_edges.begin()));
+    */
+    for(const pair<string, string>& edge : all_edges) {
+        if(edges.find(edge) == edges.end()) {
+            complement_edges.insert(edge);
+        }
+    }
     return Graph(vertices, complement_edges);
 }
 
 Graph operator+(const Graph& graph1, const Graph& graph2)
 {
-    set<string> union_vertices;
-    set_union(graph1.vertices.begin(), graph1.vertices.end(),
+    set<string> union_vertices = graph1.vertices;
+    /* Use of algorithm
+        set_union(graph1.vertices.begin(), graph1.vertices.end(),
         graph2.vertices.begin(), graph2.vertices.end(), union_vertices.begin());
+    */
 
-    map<string, string> union_edges;
-    set_union(graph1.edges.begin(), graph1.edges.end(),
-        graph2.edges.begin(), graph2.edges.end(), union_edges.begin());
+    for(const string& vertice : graph2.vertices) {
+        union_vertices.insert(vertice);
+    }
+
+    set<pair<string, string>> union_edges = graph1.edges;
+    /* Use of algorithm
+        set_union(graph1.edges.begin(), graph1.edges.end(),
+         graph2.edges.begin(), graph2.edges.end(), union_edges.begin());
+    */
+
+    for(const pair<string, string>& edge : graph2.edges) {
+        union_edges.insert(edge);
+    }
 
     return Graph(union_vertices, union_edges);
 }
@@ -91,13 +132,28 @@ Graph operator+(const Graph& graph1, const Graph& graph2)
 Graph operator^(const Graph& graph1, const Graph& graph2)
 {
     set<string> intersection_vertices;
-    set_intersection(graph1.vertices.begin(), graph1.vertices.end(),
-        graph2.vertices.begin(), graph2.vertices.end(), intersection_vertices.begin());
+    /* Use of algorithm
+        set_intersection(graph1.vertices.begin(), graph1.vertices.end(),
+         graph2.vertices.begin(), graph2.vertices.end(), intersection_vertices.begin());
+    */
 
-    map<string, string> intersection_edges;
-    set_intersection(graph1.edges.begin(), graph1.edges.end(),
-        graph2.edges.begin(), graph2.edges.end(), intersection_edges.begin());
+    for(const string& vertice : graph1.vertices) {
+        if(graph2.vertices.find(vertice) != graph2.vertices.end()) {
+            intersection_vertices.insert(vertice);
+        }
+    }
 
+    set<pair<string, string>> intersection_edges;
+    /* Use of algorithm
+        set_intersection(graph1.edges.begin(), graph1.edges.end(),
+         graph2.edges.begin(), graph2.edges.end(), intersection_edges.begin());
+    */
+
+    for(const pair<string, string>& edge : graph1.edges) {
+        if(graph2.edges.find(edge) != graph2.edges.end()) {
+            intersection_edges.insert(edge);
+        }
+    }
     return Graph(intersection_vertices, intersection_edges);
 }
 
@@ -110,7 +166,7 @@ Graph operator*(const Graph& graph1, const Graph& graph2)
         }
     }
 
-    map<string, string> product_edges;
+    set<pair<string, string>> product_edges;
     for(const pair<string, string>& first_edge : graph1.edges) {
         for(const pair<string, string>& second_edge : graph2.edges) {
             product_edges.insert({ '[' + first_edge.first + ';' + second_edge.first + ']',
@@ -121,9 +177,9 @@ Graph operator*(const Graph& graph1, const Graph& graph2)
     return Graph(product_vertices, product_edges);
 }
 
-static map<string, string> createFullEdges(set<string> vertices)
+static set<pair<string, string>> createFullEdges(set<string> vertices)
 {
-    map<string, string> edges;
+    set<pair<string, string>> edges;
     for(const string& first_vertice : vertices) {
         for(const string& second_vertice : vertices) {
             if(first_vertice != second_vertice) {
