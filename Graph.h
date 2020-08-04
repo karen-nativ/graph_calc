@@ -8,7 +8,8 @@
 /**
 * Class representing a graph containing vertices and edges.
 */
-class Graph {
+class Graph
+{
     std::set<std::string> vertices;
     std::map<std::string, std::string> edges;
 
@@ -33,21 +34,18 @@ public:
     * @return A reference to a new graph containing the vertices unique to the left graph,
     *           and the edges from the left graph that connect these vertices.
     */
-    Graph& operator-(const Graph& graph);
+    Graph operator-(const Graph& graph) const;
 
     /**
     * Creates a copy of the graph, with all possible edges connecting two vertices, not including the ones that
     *   exist on the given graph.
     * @return A reference to the graph created, which is the complement of the given graph.
     */
-    Graph& operator!();
+    Graph operator!() const;
 
-    /**
-    * Validates that the given string follows requirements for vertice names.
-    * @param vertice_name The string that is validated.
-    * @return true if the name is a valid vertice name, otherwise false.
-    */
-    static bool isValidName(const std::string& vertice_name);
+    friend Graph operator+(const Graph& graph1, const Graph& graph2);
+    friend Graph operator^(const Graph& graph1, const Graph& graph2);
+    friend Graph operator*(const Graph& graph1, const Graph& graph2);
 };
 
 
@@ -55,9 +53,9 @@ public:
 * Calculates the union of two graphs.
 * @param graph1 First graph to add.
 * @param graph2 Second graph to add.
-* @return A reefernce to a new graph which is the union of the given graphs.
+* @return A reference to a new graph which is the union of the given graphs.
 */
-Graph& operator+(const Graph& graph1, const Graph& graph2);
+Graph operator+(const Graph& graph1, const Graph& graph2);
 
 /**
 * Calculates the intersection of two graphs.
@@ -65,15 +63,7 @@ Graph& operator+(const Graph& graph1, const Graph& graph2);
 * @param graph2 Second graph to intersect.
 * @return A reference to a new graph which is the intersection of the given graphs.
 */
-Graph& operator^(const Graph& graph1, const Graph& graph2);
-
-/**
-* Calculates the intersection of two graphs.
-* @param graph1 First graph to intersect.
-* @param graph2 Second graph to intersect.
-* @return A reference to a new graph which is the intersection of the given graphs.
-*/
-Graph& operator^(const Graph& graph1, const Graph& matrix2);
+Graph operator^(const Graph& graph1, const Graph& graph2);
 
 /**
 * Calculates the product of two graphs, which is a graph that contains vertices that are all combinations of the
@@ -83,6 +73,6 @@ Graph& operator^(const Graph& graph1, const Graph& matrix2);
 * @param graph2 Second graph to multiply.
 * @return A reference to a new graph which is the product of the given graphs.
 */
-Graph& operator*(const Graph& graph1, const Graph& graph2);
+Graph operator*(const Graph& graph1, const Graph& graph2);
 
 #endif GRAPH_H
