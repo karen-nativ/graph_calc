@@ -39,24 +39,23 @@ public:
 
 Graph::Graph(const set<string>& new_vertices, const set<pair<string, string>>& new_edges)
 {
-    /* Use of algorithm
-        copy_if(new_vertices.begin(), new_vertices.end(), vertices.begin(), isValidName);
-        ValidEdge isValid(vertices);
-        copy_if(new_edges.begin(), new_edges.end(), edges.begin(), isValid);
-    */
-
+    copy_if(new_vertices.begin(), new_vertices.end(), inserter(vertices, vertices.begin()), isValidName);
+    ValidEdge isValid(vertices);
+    copy_if(new_edges.begin(), new_edges.end(), inserter(edges, edges.begin()), isValid);
+    
+    /* Without algorithm
     for(const string& new_vertice : new_vertices) {
         if(isValidName(new_vertice)) {
             vertices.insert(new_vertice);
         }
     }
     ValidEdge isValid(vertices);
-
+    
     for(const pair<string, string>& new_edge : new_edges) {
         if(isValid(new_edge)) {
             edges.insert(new_edge);
         }
-    }
+    }*/
 
 }
 
@@ -68,15 +67,16 @@ Graph Graph::operator-(const Graph& graph) const
 {
     set<string> difference_vertices;
     set<pair<string, string>> difference_edges;
-    /* Use of algorithm
-       set_difference(vertices.begin(), vertices.end(), graph.vertices.begin(),
+    set_difference(vertices.begin(), vertices.end(), graph.vertices.begin(), 
         graph.vertices.end(), inserter(difference_vertices, difference_vertices.begin()));
-    */
+
+    /* Withough algorithm
     for(const string& vertice : vertices) {
         if(graph.vertices.find(vertice) == graph.vertices.end()) {
             difference_vertices.insert(vertice);
         }
     }
+    */
 
     for(const pair<string, string>& edge : edges) {
         ValidEdge isValid(difference_vertices);
@@ -92,68 +92,67 @@ Graph Graph::operator!() const
 {
     set<pair<string, string>> all_edges = createFullEdges(vertices);
     set<pair<string, string>> complement_edges;
-    /* Use of algorithm
-        set_difference(all_edges.begin(), all_edges.end(), edges.begin(),
-        edges.end(), inserter(all_edges, complement_edges.begin()));
-    */
+
+    set_difference(all_edges.begin(), all_edges.end(), edges.begin(),
+        edges.end(), inserter(complement_edges, complement_edges.begin()));
+
+    /* Without algorithm
     for(const pair<string, string>& edge : all_edges) {
         if(edges.find(edge) == edges.end()) {
             complement_edges.insert(edge);
         }
     }
+    */
     return Graph(vertices, complement_edges);
 }
 
 Graph operator+(const Graph& graph1, const Graph& graph2)
 {
-    set<string> union_vertices = graph1.vertices;
-    /* Use of algorithm
-        set_union(graph1.vertices.begin(), graph1.vertices.end(),
-        graph2.vertices.begin(), graph2.vertices.end(), union_vertices.begin());
-    */
+    set<string> union_vertices;
+    set_union(graph1.vertices.begin(), graph1.vertices.end(), 
+        graph2.vertices.begin(), graph2.vertices.end(), inserter(union_vertices, union_vertices.begin()));
 
+    /*Without algorithm
     for(const string& vertice : graph2.vertices) {
         union_vertices.insert(vertice);
-    }
+    }*/
 
-    set<pair<string, string>> union_edges = graph1.edges;
-    /* Use of algorithm
-        set_union(graph1.edges.begin(), graph1.edges.end(),
-         graph2.edges.begin(), graph2.edges.end(), union_edges.begin());
-    */
+    set<pair<string, string>> union_edges;
+    set_union(graph1.edges.begin(), graph1.edges.end(), 
+        graph2.edges.begin(), graph2.edges.end(), inserter(union_edges, union_edges.begin()));
 
+    /* Without algorithm
     for(const pair<string, string>& edge : graph2.edges) {
         union_edges.insert(edge);
     }
-
+    */
     return Graph(union_vertices, union_edges);
 }
 
 Graph operator^(const Graph& graph1, const Graph& graph2)
 {
     set<string> intersection_vertices;
-    /* Use of algorithm
-        set_intersection(graph1.vertices.begin(), graph1.vertices.end(),
-         graph2.vertices.begin(), graph2.vertices.end(), intersection_vertices.begin());
-    */
+    set_intersection(graph1.vertices.begin(), graph1.vertices.end(), graph2.vertices.begin(), 
+        graph2.vertices.end(), inserter(intersection_vertices, intersection_vertices.begin()));
 
+    /* Without algorithm
     for(const string& vertice : graph1.vertices) {
         if(graph2.vertices.find(vertice) != graph2.vertices.end()) {
             intersection_vertices.insert(vertice);
         }
-    }
+    }*/
 
     set<pair<string, string>> intersection_edges;
-    /* Use of algorithm
-        set_intersection(graph1.edges.begin(), graph1.edges.end(),
-         graph2.edges.begin(), graph2.edges.end(), intersection_edges.begin());
-    */
+    set_intersection(graph1.edges.begin(), graph1.edges.end(), 
+        graph2.edges.begin(), graph2.edges.end(), inserter(intersection_edges, intersection_edges.begin()));
 
+    /*Without algorithm
     for(const pair<string, string>& edge : graph1.edges) {
         if(graph2.edges.find(edge) != graph2.edges.end()) {
             intersection_edges.insert(edge);
         }
     }
+    */
     return Graph(intersection_vertices, intersection_edges);
 }
 
