@@ -59,6 +59,16 @@ Graph::Graph(const set<string>& new_vertices, const set<pair<string, string>>& n
 
 }
 
+Graph& Graph::operator=(const Graph& graph)
+{
+    if(this == &graph) {
+        return *this;
+    }
+    vertices = graph.vertices;
+    edges = graph.edges;
+    return *this;
+}
+
 const set<string> Graph::getVertices() const
 {
     return vertices;
@@ -71,8 +81,15 @@ const set<pair<string, string>> Graph::getEdges() const
 
 Graph Graph::operator-(const Graph& graph) const
 {
+    /*if(this == &graph) {
+        //if they are the same the difference is an empty graph
+        return Graph();
+    }*/
+
     set<string> difference_vertices;
     set<pair<string, string>> difference_edges;
+
+
     set_difference(vertices.begin(), vertices.end(), graph.vertices.begin(), 
         graph.vertices.end(), inserter(difference_vertices, difference_vertices.begin()));
 
@@ -115,8 +132,8 @@ Graph Graph::operator!() const
 Graph operator+(const Graph& graph1, const Graph& graph2)
 {
     set<string> union_vertices;
-    set_union(graph1.getVertices().begin(), graph1.getVertices().end(), 
-        graph2.getVertices().begin(), graph2.getVertices().end(), inserter(union_vertices, union_vertices.begin()));
+    set_union(graph1.vertices.begin(), graph1.vertices.end(), 
+        graph2.vertices.begin(), graph2.vertices.end(), inserter(union_vertices, union_vertices.begin()));
 
     /*Without algorithm
     for(const string& vertice : graph2.vertices) {
@@ -124,8 +141,8 @@ Graph operator+(const Graph& graph1, const Graph& graph2)
     }*/
 
     set<pair<string, string>> union_edges;
-    set_union(graph1.getEdges().begin(), graph1.getEdges().end(), 
-        graph2.getEdges().begin(), graph2.getEdges().end(), inserter(union_edges, union_edges.begin()));
+    set_union(graph1.edges.begin(), graph1.edges.end(),
+        graph2.edges.begin(), graph2.edges.end(), inserter(union_edges, union_edges.begin()));
 
     /* Without algorithm
     for(const pair<string, string>& edge : graph2.edges) {
@@ -138,8 +155,8 @@ Graph operator+(const Graph& graph1, const Graph& graph2)
 Graph operator^(const Graph& graph1, const Graph& graph2)
 {
     set<string> intersection_vertices;
-    set_intersection(graph1.getVertices().begin(), graph1.getVertices().end(), graph2.getVertices().begin(), 
-        graph2.getVertices().end(), inserter(intersection_vertices, intersection_vertices.begin()));
+    set_intersection(graph1.vertices.begin(), graph1.vertices.end(), graph2.vertices.begin(),
+        graph2.vertices.end(), inserter(intersection_vertices, intersection_vertices.begin()));
 
     /* Without algorithm
     for(const string& vertice : graph1.vertices) {
@@ -149,8 +166,8 @@ Graph operator^(const Graph& graph1, const Graph& graph2)
     }*/
 
     set<pair<string, string>> intersection_edges;
-    set_intersection(graph1.getEdges().begin(), graph1.getEdges().end(), 
-        graph2.getEdges().begin(), graph2.getEdges().end(), inserter(intersection_edges, intersection_edges.begin()));
+    set_intersection(graph1.edges.begin(), graph1.edges.end(),
+        graph2.edges.begin(), graph2.edges.end(), inserter(intersection_edges, intersection_edges.begin()));
 
     /*Without algorithm
     for(const pair<string, string>& edge : graph1.edges) {
@@ -165,15 +182,15 @@ Graph operator^(const Graph& graph1, const Graph& graph2)
 Graph operator*(const Graph& graph1, const Graph& graph2)
 {
     set<string> product_vertices;
-    for(const string& first_vertice : graph1.getVertices()) {
-        for(const string& second_vertice : graph2.getVertices()) {
+    for(const string& first_vertice : graph1.vertices) {
+        for(const string& second_vertice : graph2.vertices) {
             product_vertices.insert('[' + first_vertice + ';' + second_vertice + ']');
         }
     }
 
     set<pair<string, string>> product_edges;
-    for(const pair<string, string>& first_edge : graph1.getEdges()) {
-        for(const pair<string, string>& second_edge : graph2.getEdges()) {
+    for(const pair<string, string>& first_edge : graph1.edges) {
+        for(const pair<string, string>& second_edge : graph2.edges) {
             product_edges.insert({ '[' + first_edge.first + ';' + second_edge.first + ']',
                 '[' + first_edge.second + ';' + second_edge.second + ']' });
         }

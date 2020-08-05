@@ -37,6 +37,13 @@ public:
     ~Graph() = default;
 
     /**
+     * Copies the given graph to the current one.
+     * @param graph The graph to copy.
+     * @return The updated graph.
+     */
+    Graph& operator=(const Graph& graph);
+
+    /**
     * Get function for vertices of a graph.
     * @return A set of the vertices in the graph, in string format.
     */
@@ -63,6 +70,10 @@ public:
     * @return A reference to the graph created, which is the complement of the given graph.
     */
     Graph operator!() const;
+
+    friend Graph operator+(const Graph& graph1, const Graph& graph2);
+    friend Graph operator^(const Graph& graph1, const Graph& graph2);
+    friend Graph operator*(const Graph& graph1, const Graph& graph2);
 };
 
 

@@ -5,6 +5,7 @@
 #include "Graph.h"
 #include <fstream>
 #include <regex>
+#include <cctype>
 
 using std::string;
 using std::set;
@@ -23,8 +24,9 @@ using std::smatch;
 using std::unary_function;
 
 const string space_regex = "\\\s*";
+const string vertice_regex = "([\\\w\\[;\\]]+)";
 
-string trim(string s, string trim_chars)
+string trim(string s, string trim_chars = " ")
 {
     s.erase(0, s.find_first_not_of(trim_chars));
     s.erase(s.find_last_not_of(trim_chars) + 1);
@@ -33,12 +35,11 @@ string trim(string s, string trim_chars)
 
 Graph parseGraph(const string& full_graph)
 {
-    const string vertice = "([\\\w\\[;\\]]+)";
-    const string vertice_space = space_regex + vertice + space_regex;
+    const string vertice_space = space_regex + vertice_regex + space_regex;
     const string edge = "<" + vertice_space + "," + vertice_space + ">";
-    const string full_regex = "\\{(?:" + vertice_space + ",)*" + vertice_space
+    const string full_regex = "(?:" + vertice_space + ",)*" + vertice_space 
         + "(\\|)(?:" + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + ",)*"
-        + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + "\\}";
+        + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex;
 
     smatch split, vertice_match, edge_match;
     if(regex_match(full_graph, regex(full_regex))) {
@@ -49,7 +50,7 @@ Graph parseGraph(const string& full_graph)
     set<string> parsed_vertices;
 
     string vertice_string = split.prefix();
-    while(regex_search(vertice_string, vertice_match, regex(vertice))) {
+    while(regex_search(vertice_string, vertice_match, regex(vertice_regex))) {
         //CHECK IF VERTICE IS VALID
         parsed_vertices.insert(vertice_match[0]);
         vertice_string = vertice_match.suffix();
@@ -92,7 +93,7 @@ void printGraph(Graph G)
     }
     cout << "$" << endl;
     for(const pair<string, string>& edge : G.getEdges()) {
-        cout << edge.first << edge.second << endl;
+        cout << edge.first << " " << edge.second << endl;
     }
 }
 
@@ -108,7 +109,67 @@ void readCommand(istream& input)
     //Logic of command execution
 }
 
-void executeKnownCommand(const string& known_command, map<string, Graph> variables)
+Graph execute(const string& command, map<string, Graph> variables)
+{
+    smatch value_match;
+    string ops_regex = space_regex + "(!?)" + space_regex + "(?:\\{(.*)\\}|" + vertice_regex + "|\\((.*)\\))" + 
+        space_regex + "(?:(\\+|-|\\*|^)(.+))?" + space_regex;
+    Graph left_operand;
+    Graph right_operand;
+    if(regex_match(command, value_match, regex(ops_regex))) {
+        bool has_complement = value_match[1] != "";
+        if(value_match[2] != "") {
+            //Initialization
+            left_operand = has_complement ? !(parseGraph(trim(value_match[2]))) : parseGraph(trim(value_match[2]));
+        }
+        else if(value_match[3] != "") {
+            //Copy c'tor
+            if(variables.find(value_match[3]) != variables.end()) {
+                //variables exists - good
+                left_operand = has_complement ? !(variables[value_match[3]]) : variables[value_match[3]];
+            }
+            else {
+                cout << "Error: Undefined variable '" + value_match[3].str() + "'"<< endl;
+            }
+        }
+        else {
+            //We remain with ()
+            left_operand = has_complement ? !(execute(trim(value_match[4]), variables)) :
+                execute(trim(value_match[4]), variables);
+        }
+        if(value_match[5] != "") {
+            //There is a math operator
+            right_operand = execute(trim(value_match[6]), variables);
+            if(value_match[5] == "+") {
+                return left_operand + right_operand;
+            }
+            else if(value_match[5] == "-") {
+                return left_operand - right_operand;
+            }
+            else if(value_match[5] == "*") {
+                return left_operand * right_operand;
+            }
+            else if(value_match[5] == "^") {
+                return left_operand ^ right_operand;
+            }
+            else {
+                //Error - incorrect regex operator...
+                return Graph();
+            }  
+        }
+        else {
+            //There is only a left operand
+            return left_operand;
+        }
+    }
+    else {
+        //Error - incorrect rvalue?
+        cout << "ERROR!! Incorrect rvalue? (Line 160)" << endl;
+        return Graph();
+    }
+}
+
+void executeKnownCommand(const string& known_command, map<string, Graph>& variables)
 {
     smatch var_match;
     if(known_command == "reset") {
@@ -128,31 +189,27 @@ void executeKnownCommand(const string& known_command, map<string, Graph> variabl
         }
     }
 
-    else if(regex_match(known_command, var_match, regex("print" + space_regex + "(.*)"))) {
-        string var = trim(var_match[0], " ");
-        if(variables.find(var) != variables.end()) {
-            printGraph(execute(var, variables));
+    else if(regex_match(known_command, var_match,
+        regex("print" + space_regex + "\\(" + space_regex + "(.*)" + space_regex + "\\)" + space_regex))) {
+        string var = trim(var_match[1], " ");
+        printGraph(execute(var, variables));
         }
-    }
     else {
         //Error - unknown command
     }
 }
 
-Graph execute(const string& command, map<string, Graph> variables)
+static bool isValidVariableName(const string& var_name)
 {
-    switch(command[0]) {
-        case '{': //Graph initialization
-        {
-            size_t closing = command.find_first_of('}');
-            return parseGraph(command.substr(0, closing));
-        }
-        default: //Variable
-        {
-            return variables[command];
+    if(!isalpha(var_name[0])) {
+        return false;
+    }
+    for(int i = 0; i < var_name.length(); i++) {
+        if(!isalnum(var_name[i])) {
+            return false;
         }
     }
-    return Graph();
+    return true;
 }
 
 void main(int argc, char* argv[])
@@ -185,16 +242,20 @@ void main(int argc, char* argv[])
             //A variable is declared
             string variable = trim(command.substr(0, equals), " ");
             string value = trim(command.substr(equals + 1), " ");
-            if(known_commands.find(variable) != known_commands.end()) {
+            if(known_commands.find(variable) == known_commands.end()) {
                 //If variable already exists in variables do we need to free memory??
-                variables[variable] = execute(value, variables);
+                if(isValidVariableName(variable)) {
+                    variables[variable] = execute(value, variables);
+                }
+                else {
+                    //Error - invalid variable name!
+                }
             }
             else {
                 //Error - the variable name is already a known command
             }
         }
-            cout << "Gcalc> ";
-            getline(cin, command);
-        }
+        cout << "Gcalc> ";
+        getline(cin, command);
     }
 }
