@@ -14,6 +14,11 @@ class Graph
 
 public:
     /**
+     * Default C'tor. DO I NEED THIS?
+     */
+    explicit Graph() = default;
+
+    /**
      * C'tor.
      * @param vertices The vertices of the graph.
      * @param edges The edges of the graph.
@@ -24,7 +29,24 @@ public:
     * Copy c'tor.
     * @param graph The graph to copy.
     */
-    Graph(const Graph& graph);
+    Graph(const Graph& graph) = default;
+
+    /**
+    * Default D'tor
+    */
+    ~Graph() = default;
+
+    /**
+    * Get function for vertices of a graph.
+    * @return A set of the vertices in the graph, in string format.
+    */
+    const std::set<std::string> getVertices() const;
+
+    /**
+    * Get function for edges of a graph.
+    * @return A set of the edges in the graph, in string format.
+    */
+    const std::set<std::pair<std::string, std::string>> getEdges() const;
 
     /**
     * Creates a copy of the graph to the left of the minus,
@@ -41,10 +63,6 @@ public:
     * @return A reference to the graph created, which is the complement of the given graph.
     */
     Graph operator!() const;
-
-    friend Graph operator+(const Graph& graph1, const Graph& graph2);
-    friend Graph operator^(const Graph& graph1, const Graph& graph2);
-    friend Graph operator*(const Graph& graph1, const Graph& graph2);
 };
 
 
