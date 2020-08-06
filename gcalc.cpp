@@ -69,43 +69,23 @@ Graph parseGraph(const string& full_graph)
     return Graph(parsed_vertices, parsed_edges);
 }
 
-/*Graph parseGraph(const string& full_graph)
-{
-    int delimiter_index = full_graph.find("|");
-    string vertices = trim(full_graph.substr(0, delimiter_index - 1), " ");
-    string edges = trim(full_graph.substr(delimiter_index + 1), " ");
-
-    set<string> parsed_vertices = split(vertices, ",");
-    set<string> edge_set = split(edges, ">,");
-    set<pair<string, string>> parsed_edges;
-
-    for(const string& edge : edge_set) {
-        size_t seperator_index = edge.find(",");
-        string first = edge.substr(0, seperator_index);
-        string second = edge.substr(seperator_index + 1, edge.length() - seperator_index - 1);
-        parsed_edges.insert({ first, second });
-    }
-    return Graph(parsed_vertices, parsed_edges);
-}*/
-
-void printGraph(Graph G)
+void printGraph(Graph G, ostream& output)
 {
     for(const string& vertice : G.getVertices()) {
-        cout << vertice << endl;
+        output << vertice << endl;
     }
-    cout << "$" << endl;
+    output << "$" << endl;
     for(const pair<string, string>& edge : G.getEdges()) {
-        cout << edge.first << " " << edge.second << endl;
+        output << edge.first << " " << edge.second << endl;
     }
 }
 
-void printAllVariables(const map<string, Graph>& variables)
+void printAllVariables(const map<string, Graph>& variables, ostream& output)
 {
     for(pair<string, Graph> variable : variables) {
-        cout << variable.first << endl;
+        output << variable.first << endl;
     }
 }
-
 
 Graph execute(const string& command, map<string, Graph> variables)
 {
@@ -162,12 +142,11 @@ Graph execute(const string& command, map<string, Graph> variables)
     }
     else {
         //Error - incorrect rvalue?
-        cout << "ERROR!! Incorrect rvalue? (Line 160)" << endl;
         return Graph();
     }
 }
 
-void executeKnownCommand(const string& known_command, map<string, Graph>& variables)
+void executeKnownCommand(const string& known_command, map<string, Graph>& variables, ostream& output)
 {
     smatch var_match;
     if(known_command == "reset") {
@@ -175,7 +154,7 @@ void executeKnownCommand(const string& known_command, map<string, Graph>& variab
         variables.clear();
     }
     else if(known_command == "who") {
-        printAllVariables(variables);
+        printAllVariables(variables, output);
     }
     else if(regex_match(known_command, var_match,
         regex("delete" + space_regex + "\\(" + space_regex + "(.*)" + space_regex + "\\)"))) {
@@ -191,7 +170,7 @@ void executeKnownCommand(const string& known_command, map<string, Graph>& variab
     else if(regex_match(known_command, var_match,
         regex("print" + space_regex + "\\(" + space_regex + "(.*)" + space_regex + "\\)"))) {
         string var = trim(var_match[1], " ");
-        printGraph(execute(var, variables));
+        printGraph(execute(var, variables), output);
     }
     else {
         throw UnrecognizedCommand(known_command);
@@ -215,12 +194,14 @@ static void ValidateVariableName(const string& var_name, set<string>& known_comm
 
 }
 
-bool readCommand(istream& input, map<string, Graph>& variables)
+bool readCommand(istream& input, map<string, Graph>& variables, ostream& output)
 {
     const string exit = "quit";
     set<string> known_commands = { "reset", "who", "delete" , "print", exit };
     string command;
-    getline(input, command);
+    if(!getline(input, command)) {
+        return true;
+    }
     command = trim(command, " ");
     if(command == exit) {
         return true;
@@ -228,7 +209,7 @@ bool readCommand(istream& input, map<string, Graph>& variables)
     size_t equals = command.find_first_of("=");
     if(equals == string::npos) {
         //A saved word is used
-        executeKnownCommand(command, variables);
+        executeKnownCommand(command, variables, output);
     }
     else {
         //A variable is declared
@@ -245,28 +226,39 @@ bool readCommand(istream& input, map<string, Graph>& variables)
 void main(int argc, char* argv[])
 {
     map<string, Graph> variables;
-    istream& input = cin;
-    ostream& output = cout;
     bool stop = false;
     bool from_console = (argc == 1);
+    ifstream input_file;
+    ofstream output_file;
+    if(!from_console) {
+        input_file.open(argv[1]);
+        output_file.open(argv[2]);
+    }
     while(!stop) {
         if(from_console) {
             //Read from console
-            cout << "AGcalc> ";
-        }
-        else {
-            //Read from file
-            ifstream input_file(argv[1]);
-            ofstream output_file(argv[2]);
+            cout << "Gcalc> ";
         }
         try {
-            stop = readCommand(input, variables);
+            stop = from_console ? readCommand(cin, variables, cout) : readCommand(input_file, variables, output_file);
         }
         catch(const Exception& exc) {
-            output << exc.what() << endl;
+            if(from_console) {
+                cout << exc.what() << endl;
+            }
+            else {
+                output_file << exc.what() << endl;
+            }
+
         }
         catch(...) {
-            output << "Error: Unknown error occured" << endl;
+            if(from_console) {
+                cout << "Error: Unknown error occured" << endl;
+            }
+            else {
+                output_file << "Error: Unknown error occured" << endl;
+            }
+
         }
     }
 }
