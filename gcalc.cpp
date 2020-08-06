@@ -90,44 +90,46 @@ void printAllVariables(const map<string, Graph>& variables, ostream& output)
 Graph execute(const string& command, map<string, Graph> variables)
 {
     smatch value_match;
-    string ops_regex = space_regex + "(!?)" + space_regex + "(?:\\{(.*)\\}|" + vertice_regex + "|\\((.*)\\))" +
-        space_regex + "(?:(\\+|-|\\*|^)(.+))?" + space_regex;
+    string old_regex = space_regex + "(!?)" + space_regex + "(?:(.+)(\\+|-|\\*|^))?" + 
+        space_regex + "(?:\\{(.*)\\}|([" + vertice_regex + ")|\\((.*)\\)" + space_regex;
+    string ops_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|^))??" + space_regex + 
+        "(!?)" + space_regex + "(?:(?:\\{(.*)\\})|" + vertice_regex + "|(?:\\((.*)\\)))" + space_regex + "$";
     Graph left_operand;
     Graph right_operand;
     if(regex_match(command, value_match, regex(ops_regex))) {
-        bool has_complement = value_match[1] != "";
-        if(value_match[2] != "") {
-            //Initialization
-            left_operand = has_complement ? !(parseGraph(trim(value_match[2]))) : parseGraph(trim(value_match[2]));
+        bool right_complement = value_match[3] != "";
+        if(value_match[4] != "") {
+            //Initialization on right operand
+            right_operand = right_complement ? !(parseGraph(trim(value_match[4]))) : parseGraph(trim(value_match[4]));
         }
-        else if(value_match[3] != "") {
-            //Copy c'tor
-            if(variables.find(value_match[3]) != variables.end()) {
+        else if(value_match[5] != "") {
+            //Copy c'tor on right operand
+            if(variables.find(value_match[5]) != variables.end()) {
                 //variables exists - good
-                left_operand = has_complement ? !(variables[value_match[3]]) : variables[value_match[3]];
+                right_operand = right_complement ? !(variables[value_match[5]]) : variables[value_match[5]];
             }
             else {
-                throw UndefinedVariable(value_match[3]);
+                throw UndefinedVariable(value_match[5]);
             }
         }
         else {
             //We remain with ()
-            left_operand = has_complement ? !(execute(trim(value_match[4]), variables)) :
-                execute(trim(value_match[4]), variables);
+            right_operand = right_complement ? !(execute(trim(value_match[6]), variables)) :
+                execute(trim(value_match[6]), variables);
         }
-        if(value_match[5] != "") {
+        if(value_match[2] != "") {
             //There is a math operator
-            right_operand = execute(trim(value_match[6]), variables);
-            if(value_match[5] == "+") {
+            left_operand = execute(trim(value_match[1]), variables);
+            if(value_match[2] == "+") {
                 return left_operand + right_operand;
             }
-            else if(value_match[5] == "-") {
+            else if(value_match[2] == "-") {
                 return left_operand - right_operand;
             }
-            else if(value_match[5] == "*") {
+            else if(value_match[2] == "*") {
                 return left_operand * right_operand;
             }
-            else if(value_match[5] == "^") {
+            else if(value_match[2] == "^") {
                 return left_operand ^ right_operand;
             }
             else {
@@ -136,13 +138,12 @@ Graph execute(const string& command, map<string, Graph> variables)
             }
         }
         else {
-            //There is only a left operand
-            return left_operand;
+            //There is no left operand (complement alrady happened)
+            return right_operand;
         }
     }
     else {
-        //Error - incorrect rvalue?
-        return Graph();
+        throw SyntaxError();
     }
 }
 

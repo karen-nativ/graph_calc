@@ -34,3 +34,8 @@ UnrecognizedCommand::UnrecognizedCommand(const string& command) :
 InvalidInitialization::InvalidInitialization() : GraphException("Invalid graph initialization")
 {
 }
+
+SyntaxError::SyntaxError() : GraphException("Syntax error")
+{
+}
+

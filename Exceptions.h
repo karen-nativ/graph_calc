@@ -97,4 +97,16 @@ public:
     InvalidInitialization();
 };
 
+/**
+ * Thrown if there is a generic syntax error in the command.
+ */
+class SyntaxError : public GraphException
+{
+public:
+    /**
+     * Default c'tor.
+     */
+    SyntaxError();
+};
+
 #endif //GRAPH_EXCEPTIONS_H
