@@ -6,6 +6,7 @@
 #include <fstream>
 #include <regex>
 #include <cctype>
+#include "Exceptions.h"
 
 using std::string;
 using std::set;
@@ -15,6 +16,7 @@ using std::cin;
 using std::cout;
 using std::endl;
 using std::istream;
+using std::ostream;
 using std::ifstream;
 using std::ofstream;
 using std::cerr;
@@ -37,13 +39,13 @@ Graph parseGraph(const string& full_graph)
 {
     const string vertice_space = space_regex + vertice_regex + space_regex;
     const string edge = "<" + vertice_space + "," + vertice_space + ">";
-    const string full_regex = "(?:" + vertice_space + ",)*" + vertice_space 
+    const string full_regex = "(?:" + vertice_space + ",)*" + vertice_space
         + "(\\|)(?:" + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + ",)*"
         + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex;
 
     smatch split, vertice_match, edge_match;
-    if(regex_match(full_graph, regex(full_regex))) {
-        //Exception - incorrect syntax
+    if(!regex_match(full_graph, regex(full_regex))) {
+        throw InvalidInitialization();
     }
     regex_search(full_graph, split, regex("\\|"));
 
@@ -104,15 +106,11 @@ void printAllVariables(const map<string, Graph>& variables)
     }
 }
 
-void readCommand(istream& input)
-{
-    //Logic of command execution
-}
 
 Graph execute(const string& command, map<string, Graph> variables)
 {
     smatch value_match;
-    string ops_regex = space_regex + "(!?)" + space_regex + "(?:\\{(.*)\\}|" + vertice_regex + "|\\((.*)\\))" + 
+    string ops_regex = space_regex + "(!?)" + space_regex + "(?:\\{(.*)\\}|" + vertice_regex + "|\\((.*)\\))" +
         space_regex + "(?:(\\+|-|\\*|^)(.+))?" + space_regex;
     Graph left_operand;
     Graph right_operand;
@@ -129,7 +127,7 @@ Graph execute(const string& command, map<string, Graph> variables)
                 left_operand = has_complement ? !(variables[value_match[3]]) : variables[value_match[3]];
             }
             else {
-                cout << "Error: Undefined variable '" + value_match[3].str() + "'"<< endl;
+                throw UndefinedVariable(value_match[3]);
             }
         }
         else {
@@ -155,7 +153,7 @@ Graph execute(const string& command, map<string, Graph> variables)
             else {
                 //Error - incorrect regex operator...
                 return Graph();
-            }  
+            }
         }
         else {
             //There is only a left operand
@@ -179,83 +177,96 @@ void executeKnownCommand(const string& known_command, map<string, Graph>& variab
     else if(known_command == "who") {
         printAllVariables(variables);
     }
-    else if(regex_match(known_command, var_match, regex("delete" + space_regex + "(.*)"))) {
-        string var = trim(var_match[0], " ");
+    else if(regex_match(known_command, var_match,
+        regex("delete" + space_regex + "\\(" + space_regex + "(.*)" + space_regex + "\\)"))) {
+        string var = trim(var_match[1], " ");
         if(variables.find(var) != variables.end()) {
             variables.erase(var);
         }
         else {
-            //Error - trying to delete a variable that doesn't exist!
+            throw UndefinedVariable(var);
         }
     }
 
     else if(regex_match(known_command, var_match,
-        regex("print" + space_regex + "\\(" + space_regex + "(.*)" + space_regex + "\\)" + space_regex))) {
+        regex("print" + space_regex + "\\(" + space_regex + "(.*)" + space_regex + "\\)"))) {
         string var = trim(var_match[1], " ");
         printGraph(execute(var, variables));
-        }
+    }
     else {
-        //Error - unknown command
+        throw UnrecognizedCommand(known_command);
     }
 }
 
-static bool isValidVariableName(const string& var_name)
+static void ValidateVariableName(const string& var_name, set<string>& known_commands)
 {
     if(!isalpha(var_name[0])) {
-        return false;
+        throw IllegalVariableName(var_name);
     }
     for(int i = 0; i < var_name.length(); i++) {
         if(!isalnum(var_name[i])) {
-            return false;
+            throw IllegalVariableName(var_name);
         }
     }
-    return true;
+    if(known_commands.find(var_name) != known_commands.end()) {
+        //Variable name is a known command
+        throw IllegalVariableName(var_name);
+    }
+
+}
+
+bool readCommand(istream& input, map<string, Graph>& variables)
+{
+    const string exit = "quit";
+    set<string> known_commands = { "reset", "who", "delete" , "print", exit };
+    string command;
+    getline(input, command);
+    command = trim(command, " ");
+    if(command == exit) {
+        return true;
+    }
+    size_t equals = command.find_first_of("=");
+    if(equals == string::npos) {
+        //A saved word is used
+        executeKnownCommand(command, variables);
+    }
+    else {
+        //A variable is declared
+        string variable = trim(command.substr(0, equals), " ");
+        string value = trim(command.substr(equals + 1), " ");
+        ValidateVariableName(variable, known_commands);
+        //If variable already exists in variables do we need to free memory??
+        variables[variable] = execute(value, variables);
+
+    }
+    return false;
 }
 
 void main(int argc, char* argv[])
 {
-    /* switch(argc) {
-         case 1: //Read from console
-         {
-             break;
-         }
-         case 3: //Read from file
-             break;
-         default: //Error
-             break;
-     }*/
-
     map<string, Graph> variables;
-    const string exit = "quit";
-    set<string> known_commands = { "reset", "who", "delete" , "print" };
-    string command;
-    cout << "Gcalc> ";
-    getline(cin, command);
-    command = trim(command, " ");
-    while(command != exit) {
-        size_t equals = command.find_first_of("=");
-        if(equals == string::npos) {
-            //A saved word is used
-            executeKnownCommand(command, variables);
+    istream& input = cin;
+    ostream& output = cout;
+    bool stop = false;
+    bool from_console = (argc == 1);
+    while(!stop) {
+        if(from_console) {
+            //Read from console
+            cout << "AGcalc> ";
         }
         else {
-            //A variable is declared
-            string variable = trim(command.substr(0, equals), " ");
-            string value = trim(command.substr(equals + 1), " ");
-            if(known_commands.find(variable) == known_commands.end()) {
-                //If variable already exists in variables do we need to free memory??
-                if(isValidVariableName(variable)) {
-                    variables[variable] = execute(value, variables);
-                }
-                else {
-                    //Error - invalid variable name!
-                }
-            }
-            else {
-                //Error - the variable name is already a known command
-            }
+            //Read from file
+            ifstream input_file(argv[1]);
+            ofstream output_file(argv[2]);
         }
-        cout << "Gcalc> ";
-        getline(cin, command);
+        try {
+            stop = readCommand(input, variables);
+        }
+        catch(const Exception& exc) {
+            output << exc.what() << endl;
+        }
+        catch(...) {
+            output << "Error: Unknown error occured" << endl;
+        }
     }
 }
