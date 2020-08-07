@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iterator>
 #include <cctype>
+#include "Exceptions.h"
 
 using namespace std;
 
@@ -39,10 +40,19 @@ public:
 
 Graph::Graph(const set<string>& new_vertices, const set<pair<string, string>>& new_edges)
 {
-    copy_if(new_vertices.begin(), new_vertices.end(), inserter(vertices, vertices.begin()), isValidName);
-    ValidEdge isValid(vertices);
-    copy_if(new_edges.begin(), new_edges.end(), inserter(edges, edges.begin()), isValid);
-    
+    ValidEdge isValidEdge(new_vertices);
+    if(all_of(new_vertices.begin(), new_vertices.end(), isValidName) && all_of(new_edges.begin(), new_edges.end(), isValidEdge)) {
+        copy(new_vertices.begin(), new_vertices.end(), inserter(vertices, vertices.begin()));
+        copy(new_edges.begin(), new_edges.end(), inserter(edges, edges.begin()));
+    }
+    else {
+        //Invalid edge or vertice
+        throw InvalidInitialization();
+    }
+
+
+
+
     /* Without algorithm
     for(const string& new_vertice : new_vertices) {
         if(isValidName(new_vertice)) {
@@ -50,7 +60,7 @@ Graph::Graph(const set<string>& new_vertices, const set<pair<string, string>>& n
         }
     }
     ValidEdge isValid(vertices);
-    
+
     for(const pair<string, string>& new_edge : new_edges) {
         if(isValid(new_edge)) {
             edges.insert(new_edge);
@@ -90,7 +100,7 @@ Graph Graph::operator-(const Graph& graph) const
     set<pair<string, string>> difference_edges;
 
 
-    set_difference(vertices.begin(), vertices.end(), graph.vertices.begin(), 
+    set_difference(vertices.begin(), vertices.end(), graph.vertices.begin(),
         graph.vertices.end(), inserter(difference_vertices, difference_vertices.begin()));
 
     /* Withough algorithm
@@ -132,7 +142,7 @@ Graph Graph::operator!() const
 Graph operator+(const Graph& graph1, const Graph& graph2)
 {
     set<string> union_vertices;
-    set_union(graph1.vertices.begin(), graph1.vertices.end(), 
+    set_union(graph1.vertices.begin(), graph1.vertices.end(),
         graph2.vertices.begin(), graph2.vertices.end(), inserter(union_vertices, union_vertices.begin()));
 
     /*Without algorithm

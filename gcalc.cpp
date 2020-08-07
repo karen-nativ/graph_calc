@@ -39,32 +39,50 @@ Graph parseGraph(const string& full_graph)
 {
     const string vertice_space = space_regex + vertice_regex + space_regex;
     const string edge = "<" + vertice_space + "," + vertice_space + ">";
-    const string full_regex = "(?:" + vertice_space + ",)*" + vertice_space
-        + "(\\|)(?:" + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + ",)*"
+    const string regex_edges = "(" + vertice_space + ",)*" + vertice_space
+        + "\\|(" + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + ",)*"
         + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex;
+    const string regex_no_edges = "((" + vertice_space + ",)*" + vertice_space + ")?" + space_regex + "(\\|)?" + space_regex;
+    smatch vertice_match;
+    set<string> parsed_vertices;
+    set<pair<string, string>> parsed_edges;
+    string vertice_string;
+    if(regex_match(full_graph, regex(regex_edges))) {
+        //Graph with edges
+        smatch split, edge_match;
+        regex_search(full_graph, split, regex("\\|"));
+        vertice_string = split.prefix();
 
-    smatch split, vertice_match, edge_match;
-    if(!regex_match(full_graph, regex(full_regex))) {
+        string edge_string = split.suffix();
+        while(regex_search(edge_string, edge_match, regex(edge))) {
+
+            //CHECK IF EDGES ARE VALID?
+            if(parsed_edges.insert({ edge_match[1], edge_match[2] }).second) {
+                edge_string = edge_match.suffix();
+            }
+            else {
+                //Trying to enter duplicate
+                throw InvalidInitialization();
+            }
+
+        }
+    }
+    else if(regex_match(full_graph, regex(regex_no_edges))) {
+        //Graph without edges
+        vertice_string = full_graph;
+    }
+    else {
         throw InvalidInitialization();
     }
-    regex_search(full_graph, split, regex("\\|"));
 
-    set<string> parsed_vertices;
-
-    string vertice_string = split.prefix();
     while(regex_search(vertice_string, vertice_match, regex(vertice_regex))) {
         //CHECK IF VERTICE IS VALID
-        parsed_vertices.insert(vertice_match[0]);
-        vertice_string = vertice_match.suffix();
-    }
-
-    set<pair<string, string>> parsed_edges;
-    string edge_string = split.suffix();
-    while(regex_search(edge_string, edge_match, regex(edge))) {
-
-        //CHECK IF EDGES ARE VALID?
-        parsed_edges.insert({ edge_match[1], edge_match[2] });
-        edge_string = edge_match.suffix();
+        if(parsed_vertices.insert(vertice_match[0]).second) {
+            vertice_string = vertice_match.suffix();
+        }
+        else {
+            throw InvalidInitialization();
+        }
     }
     return Graph(parsed_vertices, parsed_edges);
 }
@@ -80,6 +98,29 @@ void printGraph(Graph G, ostream& output)
     }
 }
 
+const string GraphToString(Graph G)
+{
+    string graph_string;
+    //graph_string += G.getVertices().size;
+    //graph_string += G.getEdges().size;
+    for(const string& vertice : G.getVertices()) {
+        //graph_string += std::to_string(vertice.length()) + vertice;
+    }
+    for(const pair<string, string>& edge : G.getEdges()) {
+        string edge_str = edge.first + " " + edge.second;
+        //graph_string += std::to_string(edge_str.length()) + edge_str;
+    }
+    return graph_string;
+}
+
+void saveGraph(Graph G, const string& filename)
+{
+    ofstream outfile(filename, std::ios_base::binary);
+    const string& graph_string = GraphToString(G);
+    size_t size = graph_string.size();
+    outfile.write(graph_string.c_str(), sizeof(size));
+}
+
 void printAllVariables(const map<string, Graph>& variables, ostream& output)
 {
     for(pair<string, Graph> variable : variables) {
@@ -90,14 +131,13 @@ void printAllVariables(const map<string, Graph>& variables, ostream& output)
 Graph execute(const string& command, map<string, Graph> variables)
 {
     smatch value_match;
-    string old_regex = space_regex + "(!?)" + space_regex + "(?:(.+)(\\+|-|\\*|^))?" + 
-        space_regex + "(?:\\{(.*)\\}|([" + vertice_regex + ")|\\((.*)\\)" + space_regex;
-    string ops_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|^))??" + space_regex + 
-        "(!?)" + space_regex + "(?:(?:\\{(.*)\\})|" + vertice_regex + "|(?:\\((.*)\\)))" + space_regex + "$";
+    string ops_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|^))??" + space_regex +
+        "((?:!" + space_regex + ")*)(?:(?:\\{(.*)\\})|" + vertice_regex + "|(?:\\((.*)\\)))" + space_regex + "$";
     Graph left_operand;
     Graph right_operand;
     if(regex_match(command, value_match, regex(ops_regex))) {
-        bool right_complement = value_match[3] != "";
+        string complements = value_match[3];
+        bool right_complement = (count(complements.begin(), complements.end(), '!') % 2 != 0);
         if(value_match[4] != "") {
             //Initialization on right operand
             right_operand = right_complement ? !(parseGraph(trim(value_match[4]))) : parseGraph(trim(value_match[4]));
@@ -133,8 +173,7 @@ Graph execute(const string& command, map<string, Graph> variables)
                 return left_operand ^ right_operand;
             }
             else {
-                //Error - incorrect regex operator...
-                return Graph();
+                throw SyntaxError();
             }
         }
         else {
@@ -173,6 +212,12 @@ void executeKnownCommand(const string& known_command, map<string, Graph>& variab
         string var = trim(var_match[1], " ");
         printGraph(execute(var, variables), output);
     }
+    else if(regex_match(known_command, var_match, regex("save" + space_regex +
+        "\\(" + space_regex + "(.*?)" + space_regex + "," + space_regex + "(^,)*" + space_regex + "\\)"))) {
+        //Save graph to file
+        Graph to_save = execute(var_match[1], variables);
+        saveGraph(to_save, var_match[2]);
+    }
     else {
         throw UnrecognizedCommand(known_command);
     }
@@ -198,10 +243,14 @@ static void ValidateVariableName(const string& var_name, set<string>& known_comm
 bool readCommand(istream& input, map<string, Graph>& variables, ostream& output)
 {
     const string exit = "quit";
-    set<string> known_commands = { "reset", "who", "delete" , "print", exit };
+    set<string> known_commands = { "reset", "who", "delete" , "print", "save", exit };
     string command;
     if(!getline(input, command)) {
+        cout << "Ariel" << endl;
         return true;
+    }
+    else {
+        
     }
     command = trim(command, " ");
     if(command == exit) {
