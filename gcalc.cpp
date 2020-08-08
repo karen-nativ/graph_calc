@@ -1,6 +1,7 @@
 #include <map>
 #include <set>
 #include <fstream>
+#include <iostream>
 #include <regex>
 #include <cctype>
 #include "Exceptions.h"
@@ -26,28 +27,6 @@ using std::unary_function;
 const string space_regex = "\\\s*";
 const string vertice_regex = "([\\\w\\[;\\]]+)";
 const string vertice_space = space_regex + vertice_regex + space_regex;
-
-Graph* create()
-{
-    return new Graph();
-}
-
-void destroy(Graph* G)
-{
-    delete G;
-}
-
-Graph* addVertex(Graph* G, const string& vertice_name)
-{
-    (*G).addNewVertice(vertice_name);
-    return G;
-}
-
-Graph* addEdge(Graph* G, const string& vertice1, const string& vertice2)
-{
-    (*G).addNewEdge({ vertice1, vertice2 });
-    return G;
-}
 
 static string trim(string s, string trim_chars = " ")
 {

@@ -1,3 +1,6 @@
+#ifndef GCALC_H
+#define GCALC_H
+
 #include "Graph.h"
 #include <iostream>
 #include <map>
@@ -19,14 +22,6 @@ void executeKnownCommand(const std::string& known_command, map<std::string, Grap
 
 bool readCommand(istream& input, std::map<std::string, Graph>& variables, ostream& output);
 
-Graph* create();
-
-void destroy(Graph* G);
-
-Graph* addVertex(Graph* G, const std::string& vertice_name);
-
-Graph* addEdge(Graph* G, const std::string& vertice1, const std::string& vertice2);
-
 static std::string trim(std::string s, std::string trim_chars = " ");
 
 static void writeVerticetoFile(const std::string& vertice, ostream& outfile);
@@ -36,4 +31,6 @@ static std::string readVerticefromFile(istream& infile);
 static int getOpeningParentheses(const std::string& command);
 
 static void ValidateVariableName(const std::string& var_name, set<std::string>& known_commands);
+
+#endif //GCALC_H
 

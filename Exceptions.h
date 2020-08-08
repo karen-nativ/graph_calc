@@ -69,7 +69,7 @@ public:
      * C'tor
      * @param edge The illegal edge.
      */
-    IllegalEdge(const std::pair<string, string>& edge);
+    IllegalEdge(const std::pair<std::string, std::string>& edge);
 };
 
 /**
