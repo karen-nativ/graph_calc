@@ -27,6 +27,7 @@ using std::unary_function;
 
 const string space_regex = "\\\s*";
 const string vertice_regex = "([\\\w\\[;\\]]+)";
+const string vertice_space = space_regex + vertice_regex + space_regex;
 
 string trim(string s, string trim_chars = " ")
 {
@@ -37,12 +38,12 @@ string trim(string s, string trim_chars = " ")
 
 Graph parseGraph(const string& full_graph)
 {
-    const string vertice_space = space_regex + vertice_regex + space_regex;
     const string edge = "<" + vertice_space + "," + vertice_space + ">";
-    const string regex_edges = "(" + vertice_space + ",)*" + vertice_space
+    const string regex_edges = "^(" + vertice_space + ",)*" + vertice_space
         + "\\|(" + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + ",)*"
-        + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex;
-    const string regex_no_edges = "((" + vertice_space + ",)*" + vertice_space + ")?" + space_regex + "(\\|)?" + space_regex;
+        + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + "$";
+    const string regex_no_edges = "^((" + vertice_space + ",)*" + vertice_space + ")?" + space_regex + "(\\|)?"
+        + space_regex + "$";
     smatch vertice_match;
     set<string> parsed_vertices;
     set<pair<string, string>> parsed_edges;
@@ -98,27 +99,80 @@ void printGraph(Graph G, ostream& output)
     }
 }
 
-const string GraphToString(Graph G)
+static void writeVerticetoFile(const string& vertice, ostream& outfile)
 {
-    string graph_string;
-    //graph_string += G.getVertices().size;
-    //graph_string += G.getEdges().size;
-    for(const string& vertice : G.getVertices()) {
-        //graph_string += std::to_string(vertice.length()) + vertice;
-    }
-    for(const pair<string, string>& edge : G.getEdges()) {
-        string edge_str = edge.first + " " + edge.second;
-        //graph_string += std::to_string(edge_str.length()) + edge_str;
-    }
-    return graph_string;
+    unsigned int vertice_length = vertice.length();
+    outfile.write((char*)&vertice_length, sizeof(vertice_length));
+    outfile.write((char*)&vertice[0], vertice_length);
 }
 
 void saveGraph(Graph G, const string& filename)
 {
     ofstream outfile(filename, std::ios_base::binary);
-    const string& graph_string = GraphToString(G);
-    size_t size = graph_string.size();
-    outfile.write(graph_string.c_str(), sizeof(size));
+    if(!outfile) {
+        throw OpenFileError(filename);
+    }
+    set<string> vertices = G.getVertices();
+    unsigned int num_vertices = vertices.size();
+    outfile.write((char*)&num_vertices, sizeof(num_vertices));
+
+    set<pair<string, string>> edges = G.getEdges();
+    unsigned int num_edges = edges.size();
+    outfile.write((char*)&num_edges, sizeof(num_edges));
+
+    for(const string& vertice : vertices) {
+        writeVerticetoFile(vertice, outfile);
+    }
+    for(const pair<string, string>& edge : edges) {
+        writeVerticetoFile(edge.first, outfile);
+        writeVerticetoFile(edge.second, outfile);
+    }
+}
+
+static string readVerticefromFile(istream& infile)
+{
+    unsigned int vertice_length;
+    infile.read((char*)&vertice_length, sizeof(vertice_length));
+    string vertice;
+    vertice.resize(vertice_length);
+    infile.read((char*)&vertice[0], vertice_length);
+    return vertice;
+}
+
+Graph loadGraph(const string& filename)
+{
+    set<string> parsed_vertices;
+    set<pair<string, string>> parsed_edges;
+    ifstream infile(filename, std::ios_base::binary);
+    if(!infile) {
+        throw OpenFileError(filename);
+    }
+    try {
+        unsigned int num_vertices;
+        infile.read((char*)&num_vertices, sizeof(num_vertices));
+
+        unsigned int num_edges;
+        infile.read((char*)&num_edges, sizeof(num_edges));
+
+        for(int i = 0; i < num_vertices; i++) {
+            string vertice = readVerticefromFile(infile);
+            if(!parsed_vertices.insert(vertice).second) {
+                throw InvalidInitialization();
+            }
+        }
+        for(int i = 0; i < num_edges; i++) {
+            string vertice1 = readVerticefromFile(infile);
+            string vertice2 = readVerticefromFile(infile);
+            if(!parsed_edges.insert({ vertice1, vertice2 }).second) {
+                throw InvalidInitialization();
+            }
+        }
+    }
+    catch(...) {
+        throw OpenFileError(filename);
+    }
+
+    return Graph(parsed_vertices, parsed_edges);
 }
 
 void printAllVariables(const map<string, Graph>& variables, ostream& output)
@@ -128,61 +182,109 @@ void printAllVariables(const map<string, Graph>& variables, ostream& output)
     }
 }
 
+static int getOpeningParentheses(const string& command)
+{
+    int counter = 1;
+    if(command.back() == ')') {
+        for(int i = command.length() - 2; i >= 0; i--) {
+            if(command[i] == ')') {
+                counter++;
+            }
+            else if(command[i] == '(') {
+                if(counter == 1) {
+                    return i;
+                }
+                counter--;
+            }
+        }
+
+    }
+    //We have arrived to the beginning and haven't matched all parentheses, or the last character is not parentheses
+    throw SyntaxError();
+}
+
 Graph execute(const string& command, map<string, Graph> variables)
 {
+    Graph left_operand, right_operand;
+    string non_const_command = trim(command);
+    string load = "load";
+    string load_regex = load + space_regex + "\\(" + space_regex + "([^,]*)" + space_regex + "\\)";
+    bool parentheses = (command.back() == ')');
+    if(parentheses) {
+        int opening = getOpeningParentheses(command);
+        string right_operand_str = command.substr((opening + 1), static_cast<int>(command.length()) - opening - 2);
+        string left_part = trim(command.substr(0, opening));
+        if((left_part.length() >= load.length()) && 
+            (left_part.compare(left_part.length() - load.length(), load.length(), load) == 0)) {
+            //We have load command
+            parentheses = false;
+        }
+        else {
+            //We have parentheses
+            non_const_command = left_part;
+            right_operand = execute(trim(right_operand_str), variables);
+        }  
+    }
     smatch value_match;
-    string ops_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|^))??" + space_regex +
-        "((?:!" + space_regex + ")*)(?:(?:\\{(.*)\\})|" + vertice_regex + "|(?:\\((.*)\\)))" + space_regex + "$";
-    Graph left_operand;
-    Graph right_operand;
-    if(regex_match(command, value_match, regex(ops_regex))) {
-        string complements = value_match[3];
-        bool right_complement = (count(complements.begin(), complements.end(), '!') % 2 != 0);
+    string no_parentheses_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|^))??" + space_regex +
+        "((?:!" + space_regex + ")*)(?:(?:\\{(?!.*\\{.*)(.*)\\})|(\\w+)|" + load_regex + ")" + space_regex + "$";
+    string parentheses_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|^))??" + space_regex +
+        "((?:!" + space_regex + ")*)$";
+
+    if((!parentheses) && regex_match(non_const_command, value_match, regex(no_parentheses_regex))) {
         if(value_match[4] != "") {
             //Initialization on right operand
-            right_operand = right_complement ? !(parseGraph(trim(value_match[4]))) : parseGraph(trim(value_match[4]));
+            right_operand = parseGraph(trim(value_match[4]));
         }
         else if(value_match[5] != "") {
             //Copy c'tor on right operand
             if(variables.find(value_match[5]) != variables.end()) {
                 //variables exists - good
-                right_operand = right_complement ? !(variables[value_match[5]]) : variables[value_match[5]];
+                right_operand = variables[value_match[5]];
             }
             else {
                 throw UndefinedVariable(value_match[5]);
             }
         }
-        else {
-            //We remain with ()
-            right_operand = right_complement ? !(execute(trim(value_match[6]), variables)) :
-                execute(trim(value_match[6]), variables);
-        }
-        if(value_match[2] != "") {
-            //There is a math operator
-            left_operand = execute(trim(value_match[1]), variables);
-            if(value_match[2] == "+") {
-                return left_operand + right_operand;
-            }
-            else if(value_match[2] == "-") {
-                return left_operand - right_operand;
-            }
-            else if(value_match[2] == "*") {
-                return left_operand * right_operand;
-            }
-            else if(value_match[2] == "^") {
-                return left_operand ^ right_operand;
-            }
-            else {
-                throw SyntaxError();
-            }
+        else if(value_match[6] != "") {
+            //We have load
+            right_operand = loadGraph(trim(value_match[6]));
         }
         else {
-            //There is no left operand (complement alrady happened)
-            return right_operand;
+            throw SyntaxError();
+        }
+    }
+    else if(!((parentheses) && regex_match(non_const_command, value_match, regex(parentheses_regex)))) {
+        throw SyntaxError();
+    }
+
+    string complements = value_match[3];
+    bool right_complement = (count(complements.begin(), complements.end(), '!') % 2 != 0);
+    if(right_complement) {
+        right_operand = !right_operand;
+    }
+    if(value_match[2] != "") {
+        //There is a math operator, therefore also left operand
+        left_operand = execute(trim(value_match[1]), variables);
+        if(value_match[2] == "+") {
+            return left_operand + right_operand;
+        }
+        else if(value_match[2] == "-") {
+            return left_operand - right_operand;
+        }
+        else if(value_match[2] == "*") {
+            return left_operand * right_operand;
+        }
+        else if(value_match[2] == "^") {
+            return left_operand ^ right_operand;
+        }
+        else {
+            throw SyntaxError();
         }
     }
     else {
-        throw SyntaxError();
+        //There is no left operand, complement has already been checked
+        return right_operand;
     }
 }
 
@@ -206,14 +308,13 @@ void executeKnownCommand(const string& known_command, map<string, Graph>& variab
             throw UndefinedVariable(var);
         }
     }
-
     else if(regex_match(known_command, var_match,
         regex("print" + space_regex + "\\(" + space_regex + "(.*)" + space_regex + "\\)"))) {
         string var = trim(var_match[1], " ");
         printGraph(execute(var, variables), output);
     }
     else if(regex_match(known_command, var_match, regex("save" + space_regex +
-        "\\(" + space_regex + "(.*?)" + space_regex + "," + space_regex + "(^,)*" + space_regex + "\\)"))) {
+        "\\(" + space_regex + "(.*?)" + space_regex + "," + space_regex + "([^,]*)" + space_regex + "\\)"))) {
         //Save graph to file
         Graph to_save = execute(var_match[1], variables);
         saveGraph(to_save, var_match[2]);
@@ -243,14 +344,13 @@ static void ValidateVariableName(const string& var_name, set<string>& known_comm
 bool readCommand(istream& input, map<string, Graph>& variables, ostream& output)
 {
     const string exit = "quit";
-    set<string> known_commands = { "reset", "who", "delete" , "print", "save", exit };
+    set<string> known_commands = { "reset", "who", "delete" , "print", "save", "load", exit };
     string command;
     if(!getline(input, command)) {
-        cout << "Ariel" << endl;
         return true;
     }
     else {
-        
+
     }
     command = trim(command, " ");
     if(command == exit) {
@@ -275,14 +375,33 @@ bool readCommand(istream& input, map<string, Graph>& variables, ostream& output)
 
 void main(int argc, char* argv[])
 {
+    //Should main return int???
     map<string, Graph> variables;
     bool stop = false;
-    bool from_console = (argc == 1);
+    bool from_console = false;
     ifstream input_file;
     ofstream output_file;
-    if(!from_console) {
-        input_file.open(argv[1]);
-        output_file.open(argv[2]);
+    switch(argc) {
+        case 1:
+        {
+            from_console = true;
+            break;
+        }
+        case 3:
+        {
+            input_file.open(argv[1]);
+            output_file.open(argv[2]);
+            if(!input_file || !output_file) {
+                cerr << "Error: Error opening file" << endl;
+                //throw OpenFileError();
+                stop = true;
+            }
+        }
+        default:
+        {
+            cerr << "Error: Illegal argument amount" << endl;
+            stop = true;
+        }
     }
     while(!stop) {
         if(from_console) {

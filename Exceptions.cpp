@@ -35,6 +35,10 @@ InvalidInitialization::InvalidInitialization() : GraphException("Invalid graph i
 {
 }
 
+OpenFileError::OpenFileError(const string& filename) : GraphException("Unable to open '" + filename + "'")
+{
+}
+
 SyntaxError::SyntaxError() : GraphException("Syntax error")
 {
 }

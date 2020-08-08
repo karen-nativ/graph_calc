@@ -226,7 +226,30 @@ static set<pair<string, string>> createFullEdges(set<string> vertices)
 static bool isValidName(const std::string& vertice_name)
 {
     int parentheses = 0;
-    for(const char& character : vertice_name) {
+    for(int i = 0; i < vertice_name.length(); i++) {
+        switch(vertice_name[i]) {
+            case '[':
+                parentheses++;
+                break;
+            case ']':
+                if(parentheses < 1) {
+                    return false;
+                }
+                parentheses--;
+                break;
+            case ';':
+                if(parentheses < 1) {
+                    return false;
+                }
+                break;
+            default:
+                if(!isalnum(vertice_name[i])) {
+                    return false;
+                }
+                break;
+        }
+    }
+    /*for(const char& character : vertice_name) {
         switch(character) {
             case '[':
                 parentheses++;
@@ -248,7 +271,7 @@ static bool isValidName(const std::string& vertice_name)
                 }
                 break;
         }
-    }
+    }*/
     return (parentheses == 0);
 }
 

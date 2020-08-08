@@ -98,6 +98,20 @@ public:
 };
 
 /**
+ * Thrown if there is a problem opening file in batch mode.
+ */
+class OpenFileError : public GraphException
+{
+public:
+    /**
+     * C'tor
+     * @param filename The file that can't be open.
+     */
+    OpenFileError(const std::string& filename);
+};
+
+
+/**
  * Thrown if there is a generic syntax error in the command.
  */
 class SyntaxError : public GraphException
