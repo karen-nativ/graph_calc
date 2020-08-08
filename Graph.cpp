@@ -89,6 +89,21 @@ const set<pair<string, string>> Graph::getEdges() const
     return edges;
 }
 
+void Graph::addNewVertice(const string& vertice_name)
+{
+    if(!isValidName(vertice_name) || !vertices.insert(vertice_name).second) {
+        throw IllegalVerticeName(vertice_name);
+    }
+}
+
+void Graph::addNewEdge(const pair<string, string>& edge)
+{
+    ValidEdge isValidEdge(vertices);
+    if(!isValidEdge(edge) || !edges.insert(edge).second) {
+        throw IllegalEdge(edge);
+    }
+}
+
 Graph Graph::operator-(const Graph& graph) const
 {
     /*if(this == &graph) {

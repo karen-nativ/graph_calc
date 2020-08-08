@@ -1,6 +1,7 @@
 #include "Exceptions.h"
 
 using std::string;
+using std::pair;
 
 GraphException::GraphException(const string& name) : message(string("Error: ") + name)
 {
@@ -12,7 +13,12 @@ const char* GraphException::what() const noexcept
 }
 
 IllegalVerticeName::IllegalVerticeName(const string& vertice_name) : 
-    GraphException("IllegalVerticeName '" + vertice_name + "'")
+    GraphException("Illegal vertice name '" + vertice_name + "'")
+{
+}
+
+IllegalEdge::IllegalEdge(const pair<string, string>& edge) :
+    GraphException("Illegal edge '" + edge.first + " " + edge.second + "'")
 {
 }
 

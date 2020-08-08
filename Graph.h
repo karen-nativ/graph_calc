@@ -34,7 +34,7 @@ public:
     /**
     * Default D'tor
     */
-    ~Graph() = default;
+    ~Graph() = default; // DO I NEED TO DELETE (FREE) SETS?
 
     /**
      * Copies the given graph to the current one.
@@ -70,6 +70,9 @@ public:
     * @return A reference to the graph created, which is the complement of the given graph.
     */
     Graph operator!() const;
+
+    void addNewVertice(const std::string& vertice_name);
+    void addNewEdge(const std::pair<std::string, std::string>& edge);
 
     friend Graph operator+(const Graph& graph1, const Graph& graph2);
     friend Graph operator^(const Graph& graph1, const Graph& graph2);

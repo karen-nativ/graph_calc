@@ -60,6 +60,19 @@ public:
 };
 
 /**
+ * Thrown if an edge is illegal.
+ */
+class IllegalEdge : public GraphException
+{
+public:
+    /**
+     * C'tor
+     * @param edge The illegal edge.
+     */
+    IllegalEdge(const std::pair<string, string>& edge);
+};
+
+/**
  * Thrown if a variable is undefined.
  */
 class UndefinedVariable : public GraphException

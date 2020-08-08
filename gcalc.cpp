@@ -1,12 +1,10 @@
-#include <iostream>
-#include <string>
 #include <map>
 #include <set>
-#include "Graph.h"
 #include <fstream>
 #include <regex>
 #include <cctype>
 #include "Exceptions.h"
+#include "gcalc.h"
 
 using std::string;
 using std::set;
@@ -29,7 +27,29 @@ const string space_regex = "\\\s*";
 const string vertice_regex = "([\\\w\\[;\\]]+)";
 const string vertice_space = space_regex + vertice_regex + space_regex;
 
-string trim(string s, string trim_chars = " ")
+Graph* create()
+{
+    return new Graph();
+}
+
+void destroy(Graph* G)
+{
+    delete G;
+}
+
+Graph* addVertex(Graph* G, const string& vertice_name)
+{
+    (*G).addNewVertice(vertice_name);
+    return G;
+}
+
+Graph* addEdge(Graph* G, const string& vertice1, const string& vertice2)
+{
+    (*G).addNewEdge({ vertice1, vertice2 });
+    return G;
+}
+
+static string trim(string s, string trim_chars = " ")
 {
     s.erase(0, s.find_first_not_of(trim_chars));
     s.erase(s.find_last_not_of(trim_chars) + 1);
@@ -88,7 +108,7 @@ Graph parseGraph(const string& full_graph)
     return Graph(parsed_vertices, parsed_edges);
 }
 
-void printGraph(Graph G, ostream& output)
+void printGraph(const Graph& G, ostream& output)
 {
     for(const string& vertice : G.getVertices()) {
         output << vertice << endl;
@@ -106,7 +126,7 @@ static void writeVerticetoFile(const string& vertice, ostream& outfile)
     outfile.write((char*)&vertice[0], vertice_length);
 }
 
-void saveGraph(Graph G, const string& filename)
+void saveGraph(const Graph& G, const string& filename)
 {
     ofstream outfile(filename, std::ios_base::binary);
     if(!outfile) {
@@ -214,7 +234,7 @@ Graph execute(const string& command, map<string, Graph> variables)
         int opening = getOpeningParentheses(command);
         string right_operand_str = command.substr((opening + 1), static_cast<int>(command.length()) - opening - 2);
         string left_part = trim(command.substr(0, opening));
-        if((left_part.length() >= load.length()) && 
+        if((left_part.length() >= load.length()) &&
             (left_part.compare(left_part.length() - load.length(), load.length(), load) == 0)) {
             //We have load command
             parentheses = false;
@@ -223,7 +243,7 @@ Graph execute(const string& command, map<string, Graph> variables)
             //We have parentheses
             non_const_command = left_part;
             right_operand = execute(trim(right_operand_str), variables);
-        }  
+        }
     }
     smatch value_match;
     string no_parentheses_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|^))??" + space_regex +
