@@ -14,23 +14,14 @@ void saveGraph(const Graph& G, const std::string& filename);
 
 Graph loadGraph(const std::string& filename);
 
-void printAllVariables(const std::map<std::string, Graph>& variables, ostream& output);
+void printAllVariables(const std::map<std::string, Graph>& variables, std::ostream& output);
 
-Graph execute(const std::string& command, map<std::string, Graph> variables);
+Graph execute(const std::string& command, std::map<std::string, Graph> variables);
 
-void executeKnownCommand(const std::string& known_command, map<std::string, Graph>& variables, ostream& output);
+void executeKnownCommand(const std::string& known_command, 
+    std::map<std::string, Graph>& variables, std::ostream& output);
 
-bool readCommand(istream& input, std::map<std::string, Graph>& variables, ostream& output);
-
-static std::string trim(std::string s, std::string trim_chars = " ");
-
-static void writeVerticetoFile(const std::string& vertice, ostream& outfile);
-
-static std::string readVerticefromFile(istream& infile);
-
-static int getOpeningParentheses(const std::string& command);
-
-static void ValidateVariableName(const std::string& var_name, set<std::string>& known_commands);
+bool readCommand(std::istream& input, std::map<std::string, Graph>& variables, std::ostream& output);
 
 #endif //GCALC_H
 

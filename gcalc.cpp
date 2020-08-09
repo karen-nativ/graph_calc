@@ -24,11 +24,13 @@ using std::regex_match;
 using std::smatch;
 using std::unary_function;
 
-const string space_regex = "\\\s*";
-const string vertice_regex = "([\\\w\\[;\\]]+)";
+const string space_regex = "\\s*";
+const string vertice_regex = "([\\w\\[;\\]]+)";
 const string vertice_space = space_regex + vertice_regex + space_regex;
 
-static string trim(string s, string trim_chars = " ")
+static string trim(string s, const string& trim_chars = " ");
+
+static string trim(string s, const string& trim_chars)
 {
     s.erase(0, s.find_first_not_of(trim_chars));
     s.erase(s.find_last_not_of(trim_chars) + 1);
@@ -153,13 +155,13 @@ Graph loadGraph(const string& filename)
         unsigned int num_edges;
         infile.read((char*)&num_edges, sizeof(num_edges));
 
-        for(int i = 0; i < num_vertices; i++) {
+        for(unsigned int i = 0; i < num_vertices; i++) {
             string vertice = readVerticefromFile(infile);
             if(!parsed_vertices.insert(vertice).second) {
                 throw InvalidInitialization();
             }
         }
-        for(int i = 0; i < num_edges; i++) {
+        for(unsigned i = 0; i < num_edges; i++) {
             string vertice1 = readVerticefromFile(infile);
             string vertice2 = readVerticefromFile(infile);
             if(!parsed_edges.insert({ vertice1, vertice2 }).second) {
@@ -167,7 +169,7 @@ Graph loadGraph(const string& filename)
             }
         }
     }
-    catch(...) {
+    catch(const std::length_error& exc) {
         throw OpenFileError(filename);
     }
 
@@ -328,7 +330,7 @@ static void ValidateVariableName(const string& var_name, set<string>& known_comm
     if(!isalpha(var_name[0])) {
         throw IllegalVariableName(var_name);
     }
-    for(int i = 0; i < var_name.length(); i++) {
+    for(size_t i = 0; i < var_name.length(); i++) {
         if(!isalnum(var_name[i])) {
             throw IllegalVariableName(var_name);
         }
@@ -348,9 +350,6 @@ bool readCommand(istream& input, map<string, Graph>& variables, ostream& output)
     if(!getline(input, command)) {
         return true;
     }
-    else {
-
-    }
     command = trim(command, " ");
     if(command == exit) {
         return true;
@@ -367,14 +366,12 @@ bool readCommand(istream& input, map<string, Graph>& variables, ostream& output)
         ValidateVariableName(variable, known_commands);
         //If variable already exists in variables do we need to free memory??
         variables[variable] = execute(value, variables);
-
     }
     return false;
 }
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    //Should main return int???
     map<string, Graph> variables;
     bool stop = false;
     bool from_console = false;
@@ -391,15 +388,17 @@ void main(int argc, char* argv[])
             input_file.open(argv[1]);
             output_file.open(argv[2]);
             if(!input_file || !output_file) {
-                cerr << "Error: Error opening file" << endl;
-                //throw OpenFileError();
+                cerr << "Error: Failure while trying to open file" << endl;
                 stop = true;
+                return -1;
+                //throw OpenFileError();
             }
         }
         default:
         {
-            cerr << "Error: Illegal argument amount" << endl;
             stop = true;
+            cerr << "Error: Illegal argument amount: " << argc << endl;
+            return -1;
         }
     }
     while(!stop) {
@@ -409,24 +408,28 @@ void main(int argc, char* argv[])
         }
         try {
             stop = from_console ? readCommand(cin, variables, cout) : readCommand(input_file, variables, output_file);
+            if(stop) {
+                return 0;
+            }
         }
-        catch(const Exception& exc) {
+        catch(const GraphException& exc) {
             if(from_console) {
                 cout << exc.what() << endl;
             }
             else {
                 output_file << exc.what() << endl;
             }
-
+        }
+        catch(const std::exception& exc) { //Fatal Error
+            cerr << "Error: " << exc.what() << endl;
+            stop = true;
+            return -1;
         }
         catch(...) {
-            if(from_console) {
-                cout << "Error: Unknown error occured" << endl;
-            }
-            else {
-                output_file << "Error: Unknown error occured" << endl;
-            }
-
+            cerr << "Error: Unknown error occured" << endl;
+            stop = true;
+            return -1;
         }
     }
+    return -1;
 }

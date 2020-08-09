@@ -10,7 +10,7 @@
 class Graph
 {
     std::set<std::string> vertices;
-    std::set<std::pair<std::string, std::string>> edges;
+    std::set<std::pair<std::string, std::string> > edges;
 
 public:
     /**
@@ -23,7 +23,7 @@ public:
      * @param vertices The vertices of the graph.
      * @param edges The edges of the graph.
      */
-    explicit Graph(const std::set<std::string>& vertices, const std::set<std::pair<std::string, std::string>>& edges);
+    explicit Graph(const std::set<std::string>& vertices, const std::set<std::pair<std::string, std::string> >& edges);
 
     /**
     * Copy c'tor.
@@ -53,7 +53,7 @@ public:
     * Get function for edges of a graph.
     * @return A set of the edges in the graph, in string format.
     */
-    const std::set<std::pair<std::string, std::string>> getEdges() const;
+    const std::set<std::pair<std::string, std::string> > getEdges() const;
 
     /**
     * Creates a copy of the graph to the left of the minus,
@@ -106,4 +106,4 @@ Graph operator^(const Graph& graph1, const Graph& graph2);
 */
 Graph operator*(const Graph& graph1, const Graph& graph2);
 
-#endif GRAPH_H
+#endif //GRAPH_H

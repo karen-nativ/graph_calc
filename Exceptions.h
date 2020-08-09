@@ -5,16 +5,9 @@
 #include <string>
 
 /**
- * A generic exception class for the project.
- */
-class Exception : public std::exception
-{
-};
-
-/**
   * A generic exception class for the graph.
   */
-class GraphException : public Exception
+class GraphException : public std::exception
 {
     const std::string message;
 
