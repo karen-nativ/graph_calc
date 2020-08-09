@@ -104,11 +104,17 @@ public:
 };
 
 /**
- * Thrown if there is a problem opening file in batch mode.
+ * Thrown if there is a problem opening or reading a file
  */
 class OpenFileError : public GraphException
 {
 public:
+
+    /**
+     * Default C'tor
+     */
+    OpenFileError();
+
     /**
      * C'tor
      * @param filename The file that can't be open.

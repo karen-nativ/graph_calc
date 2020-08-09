@@ -30,6 +30,7 @@ const string vertice_space = space_regex + vertice_regex + space_regex;
 
 static string trim(string s, const string& trim_chars = " ");
 
+
 static string trim(string s, const string& trim_chars)
 {
     s.erase(0, s.find_first_not_of(trim_chars));
@@ -134,9 +135,15 @@ static string readVerticefromFile(istream& infile)
 {
     unsigned int vertice_length;
     infile.read((char*)&vertice_length, sizeof(vertice_length));
+    if(!infile) {
+        throw OpenFileError();
+    }
     string vertice;
     vertice.resize(vertice_length);
     infile.read((char*)&vertice[0], vertice_length);
+    if(!infile) {
+        throw OpenFileError();
+    }
     return vertice;
 }
 
@@ -151,9 +158,15 @@ Graph loadGraph(const string& filename)
     try {
         unsigned int num_vertices;
         infile.read((char*)&num_vertices, sizeof(num_vertices));
+        if(!infile) {
+            throw OpenFileError(filename);
+        }
 
         unsigned int num_edges;
         infile.read((char*)&num_edges, sizeof(num_edges));
+        if(!infile) {
+            throw OpenFileError(filename);
+        }
 
         for(unsigned int i = 0; i < num_vertices; i++) {
             string vertice = readVerticefromFile(infile);
@@ -168,6 +181,9 @@ Graph loadGraph(const string& filename)
                 throw InvalidInitialization();
             }
         }
+    }
+    catch(const OpenFileError& exc) {
+        throw OpenFileError(filename);
     }
     catch(const std::length_error& exc) {
         throw OpenFileError(filename);
@@ -206,11 +222,14 @@ static int getOpeningParentheses(const string& command)
 
 Graph execute(const string& command, map<string, Graph> variables)
 {
+    if(command.length() == 0) {
+        throw SyntaxError();
+    }
     Graph left_operand, right_operand;
     string non_const_command = trim(command);
     string load = "load";
-    string load_regex = load + space_regex + "\\(" + space_regex + "([^,]*)" + space_regex + "\\)";
-    bool parentheses = (command.back() == ')');
+    string load_regex = load + space_regex + "\\(" + space_regex + "([^,\\(\\)]*?)" + space_regex + "\\)";
+    bool parentheses = (command.length() > 0) && (command.back() == ')');
     if(parentheses) {
         int opening = getOpeningParentheses(command);
         string right_operand_str = command.substr((opening + 1), static_cast<int>(command.length()) - opening - 2);
@@ -227,9 +246,9 @@ Graph execute(const string& command, map<string, Graph> variables)
         }
     }
     smatch value_match;
-    string no_parentheses_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|^))??" + space_regex +
+    const string no_parentheses_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|\\^))??" + space_regex +
         "((?:!" + space_regex + ")*)(?:(?:\\{(?!.*\\{.*)(.*)\\})|(\\w+)|" + load_regex + ")" + space_regex + "$";
-    string parentheses_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|^))??" + space_regex +
+    const string parentheses_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|\\^))??" + space_regex +
         "((?:!" + space_regex + ")*)$";
 
     if((!parentheses) && regex_match(non_const_command, value_match, regex(no_parentheses_regex))) {
@@ -354,6 +373,7 @@ bool readCommand(istream& input, map<string, Graph>& variables, ostream& output)
     if(command == exit) {
         return true;
     }
+    //output << endl << command << endl;
     size_t equals = command.find_first_of("=");
     if(equals == string::npos) {
         //A saved word is used
@@ -393,6 +413,7 @@ int main(int argc, char* argv[])
                 return -1;
                 //throw OpenFileError();
             }
+            break;
         }
         default:
         {
