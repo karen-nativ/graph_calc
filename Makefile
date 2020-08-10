@@ -25,7 +25,7 @@ libgraph.a: $(OBJS)
 	ar -rs $@ $^
 
 tar: 
-	zip gcalc design.pdf Makefile test_in.txt test_out.txt Exceptions.cpp Exceptions.h gcalc.cpp gcalc.h gpy.cpp gpy.h Graph.cpp Graph.h graph.i
+	zip gcalc design.pdf Makefile Exceptions.cpp Exceptions.h gcalc.cpp gcalc.h gpy.cpp gpy.h Graph.cpp Graph.h test_in.txt test_out.txt file with space.gc file.with.dot.gc badfile.gc goodfile.gc graph.i
 
 clean:
 	rm -f $(OBJS) $(EXEC)
