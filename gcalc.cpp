@@ -41,11 +41,11 @@ static string trim(string s, const string& trim_chars)
 Graph parseGraph(const string& full_graph)
 {
     const string edge = "<" + vertice_space + "," + vertice_space + ">";
-    const string regex_edges = "^(" + vertice_space + ",)*" + vertice_space
+    const string regex_edges = "^\\{(" + vertice_space + ",)*" + vertice_space
         + "\\|(" + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + ",)*"
-        + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + "$";
-    const string regex_no_edges = "^((" + vertice_space + ",)*" + vertice_space + ")?" + space_regex + "(\\|)?"
-        + space_regex + "$";
+        + space_regex + "<" + vertice_space + "," + vertice_space + ">" + space_regex + "\\}$";
+    const string regex_no_edges = "^\\{((" + vertice_space + ",)*" + vertice_space + ")?" + space_regex + "(\\|)?"
+        + space_regex + "\\}$";
     smatch vertice_match;
     set<string> parsed_vertices;
     set<pair<string, string>> parsed_edges;
@@ -247,7 +247,7 @@ Graph execute(const string& command, map<string, Graph> variables)
     }
     smatch value_match;
     const string no_parentheses_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|\\^))??" + space_regex +
-        "((?:!" + space_regex + ")*)(?:(?:\\{(?!.*\\{.*)(.*)\\})|(\\w+)|" + load_regex + ")" + space_regex + "$";
+        "((?:!" + space_regex + ")*)(?:(\\{(?!.*\\{.*).*\\})|(\\w+)|" + load_regex + ")" + space_regex + "$";
     const string parentheses_regex = "^" + space_regex + "(?:(.+?)(\\+|-|\\*|\\^))??" + space_regex +
         "((?:!" + space_regex + ")*)$";
 
