@@ -1,0 +1,100 @@
+G1={[a1;][],b1, c1 | <[a1;][],c1> , <b1, c1>}
+G2 ={  a2,b2 |}
+G2=G2
+G3 = {|}
+prin t(G3) 
+G4= +G1 
+G4=G1+ G 
+G4={, x1 ,x3 | <x1,x3>} 
+G4=((G3))
+print (G1 - ) * G1 
+ G5= !  !!! ! G1
+ print(G1!) 
+G6=G1+((G2*G2))
+print (  G6)
+G6=G1+(G2*G2)
+G7=      
+G7={()} 
+G7={who}
+G8={ }
+G9={ a9, 9b | <a9, 9b>}
+ G9 =  { a , b | <a, a>} 
+G9 =  { a , b | <a, c>} 
+G9 =  { a , b | <a, b>, <,>} 
+G9 =  { a , b, c | <a, b>, <b,c>, <a,b>} 
+ G10 = (G1^G2) * !(G3)
+G11 = G1 + +G2 
+G11 = (G1 + (G2)
+G11 = (G1 - (G2)) 
+G12={ yx1,} 
+G12={[];[], a|<a, [];[]>}
+G12= {2a, 2b|<2a, 2b>}
+ G13    ={a>, b| <a,b>,b>} 
+G13={a, b, a| <a,b>} 
+G13    =   { a,b| <a>,b>} 
+G13    =   { x1, x2| <x1,<,x2>} 
+G13={a, b|<a,b>}} 
+G13 = G1 + (G3 + (G4)) + G2
+G14=G13+G13
+who={a, b | <a,b>} 
+intersection={a, b | <a,b>} 
+ G15 = G2 + (4) - G4 
+ G15 = !(!!(!G1) - !!!G2)
+G16 = !{hello ,world | <world, hello>} * G1
+G17= G1 + !!load(goodfile.gc) - (G3 + G4)
+G18=!( ! load  ( goodfile.gc ) )  + G1
+G18=load(not_exist.gc)
+print(G18)
+G19=load(no_permission.gc) 
+ print ( {a, b | <a,b>}* {c, d, e | <c,e>, <e,c>}) 
+G19=load(goodfile.gc) + load(badfile.gc) 
+save({a,b}) 
+save(G2 + (G3 + (G4)), file with space.gc)
+print(G13 - load(file with space.gc))
+save  ({b,c, e | <e,c>} ^ {c, d, e | <c,e>, <e,c>}, file.with.dot.gc) 
+print(!load(file.with.dot.gc) * !load(file with space.gc))
+delete(G19) 
+delete(G18)
+delete(G18) 
+G18 ={  a 2,b2 |<a2,b2>} 
+delete((G17)) 
+print((G17))
+(G1=load(goodfile.gc)) 
+((print(G17))) 
+load(goodfile.gc) 
+G18={x1, x2||<x1,x2>} 
+G18= G1 + G2 ; 
+(G1 + G2)=G3 
+G18= {[];, a|<[];, a>} 
+G18=(G1*G2)*G3
+print(G18)
+G18=G18+G1
+priNt=G1+G2
+G19={;, a|<;, a>} 
+G19={[;;], a|<a, [;;]>}
+delete(print)
+print(print(G1))  
+print(G1)
+print(G2)
+print(G3)
+print(G4)
+print(G5)
+print(G6)
+print(G7)
+print(G8)
+print(G9)
+print(G10)
+print(G11)
+print(G12)
+print(G13)
+print(G14)
+print(G15)
+print(G16)
+print(G17)
+print(G18)
+print(G19)
+print(priNt)
+print({})
+print({|})
+save({}, empty.gc)
+print(load(empty.gc))

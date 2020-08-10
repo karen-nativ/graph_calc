@@ -1,0 +1,180 @@
+Gcalc> Gcalc> Gcalc> Gcalc> Gcalc> Error: Unrecognized command 'prin t(G3)'
+Gcalc> Error: Syntax error
+Gcalc> Error: Undefined variable 'G'
+Gcalc> Error: Invalid graph initialization
+Gcalc> Gcalc> Error: Unrecognized command 'print (G1 - ) * G1'
+Gcalc> Gcalc> Error: Syntax error
+Gcalc> Gcalc> [a1;][]
+[a2;a2]
+[a2;b2]
+[b2;a2]
+[b2;b2]
+b1
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> Gcalc> Error: Syntax error
+Gcalc> Error: Invalid graph initialization
+Gcalc> Gcalc> Gcalc> Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Invalid graph initialization
+Gcalc> Gcalc> Error: Syntax error
+Gcalc> Error: Syntax error
+Gcalc> Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Invalid graph initialization
+Gcalc> Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Invalid graph initialization
+Gcalc> Gcalc> Gcalc> Error: Illegal variable name 'who'
+Gcalc> Gcalc> Error: Undefined variable '4'
+Gcalc> Gcalc> Gcalc> Error: Unable to open 'goodfile.gc'
+Gcalc> Error: Unable to open 'goodfile.gc'
+Gcalc> Error: Unable to open 'not_exist.gc'
+Gcalc> Error: Undefined variable 'G18'
+Gcalc> Error: Unable to open 'no_permission.gc'
+Gcalc> [a;c]
+[a;d]
+[a;e]
+[b;c]
+[b;d]
+[b;e]
+$
+[a;c] [b;e]
+[a;e] [b;c]
+Gcalc> Error: Unable to open 'badfile.gc'
+Gcalc> Error: Syntax error
+Gcalc> Gcalc> [a1;][]
+b1
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> Gcalc> [c;a2]
+[c;b2]
+[e;a2]
+[e;b2]
+$
+[c;a2] [e;b2]
+[c;b2] [e;a2]
+Gcalc> Error: Undefined variable 'G19'
+Gcalc> Error: Undefined variable 'G18'
+Gcalc> Error: Undefined variable 'G18'
+Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Undefined variable '(G17)'
+Gcalc> Error: Undefined variable 'G17'
+Gcalc> Error: Illegal variable name '(G1'
+Gcalc> Error: Unrecognized command '((print(G17)))'
+Gcalc> Error: Unrecognized command 'load(goodfile.gc)'
+Gcalc> Error: Invalid graph initialization
+Gcalc> Error: Syntax error
+Gcalc> Error: Illegal variable name '(G1 + G2)'
+Gcalc> Error: Invalid graph initialization
+Gcalc> Gcalc> $
+Gcalc> Gcalc> Gcalc> Error: Invalid graph initialization
+Gcalc> Gcalc> Error: Undefined variable 'print'
+Gcalc> Error: Syntax error
+Gcalc> [a1;][]
+b1
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> a2
+b2
+$
+Gcalc> $
+Gcalc> $
+Gcalc> [a1;][]
+b1
+c1
+$
+[a1;][] b1
+b1 [a1;][]
+c1 [a1;][]
+c1 b1
+Gcalc> [a1;][]
+[a2;a2]
+[a2;b2]
+[b2;a2]
+[b2;b2]
+b1
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> who
+$
+Gcalc> $
+Gcalc> 9b
+a9
+$
+a9 9b
+Gcalc> $
+Gcalc> [a1;][]
+b1
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> 2a
+2b
+$
+2a 2b
+Gcalc> [a1;][]
+a2
+b1
+b2
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> [a1;][]
+a2
+b1
+b2
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> [a1;][]
+b1
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> [hello;[a1;][]]
+[hello;b1]
+[hello;c1]
+[world;[a1;][]]
+[world;b1]
+[world;c1]
+$
+[hello;[a1;][]] [world;c1]
+[hello;b1] [world;c1]
+Gcalc> Error: Undefined variable 'G17'
+Gcalc> [a1;][]
+b1
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> [;;]
+a
+$
+a [;;]
+Gcalc> [a1;][]
+a2
+b1
+b2
+c1
+$
+[a1;][] c1
+b1 c1
+Gcalc> $
+Gcalc> $
+Gcalc> Gcalc> $
+Gcalc> 
