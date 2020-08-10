@@ -9,15 +9,16 @@
 */
 class Graph
 {
+private:
     std::set<std::string> vertices;
     std::set<std::pair<std::string, std::string> > edges;
-private:
+
     /**
     * Creates a set of all possible edges between given vertices.
     * @param vertices The vertices from which we create all edges.
     * @return A set of edges of the full graph of vertices
     */
-    static set<pair<string, string>> createFullEdges(set<string> vertices);
+    static std::set<std::pair<std::string, std::string>> createFullEdges(std::set<std::string> vertices);
 
     /**
     * Validates that the given string follows requirements for vertice names.
@@ -25,6 +26,8 @@ private:
     * @return true if the name is a valid vertice name, otherwise false.
     */
     static bool isValidName(const std::string& vertice_name);
+
+
 public:
     /**
      * Default C'tor. DO I NEED THIS?

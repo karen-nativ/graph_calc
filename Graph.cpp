@@ -7,20 +7,6 @@
 using namespace std;
 
 /**
-* Creates a set of all possible edges between given vertices.
-* @param vertices The vertices from which we create all edges.
-* @return A set of edges of the full graph of vertices
-*/
-static set<pair<string, string>> createFullEdges(set<string> vertices);
-
-/**
-* Validates that the given string follows requirements for vertice names.
-* @param vertice_name The string that is validated.
-* @return true if the name is a valid vertice name, otherwise false.
-*/
-static bool isValidName(const std::string& vertice_name);
-
-/**
 * A functor that validates that the given edge connects two different existing vertices.
 */
 class ValidEdge
@@ -224,7 +210,7 @@ Graph operator*(const Graph& graph1, const Graph& graph2)
     return Graph(product_vertices, product_edges);
 }
 
-static set<pair<string, string>> createFullEdges(set<string> vertices)
+set<pair<string, string>> Graph::createFullEdges(set<string> vertices)
 {
     set<pair<string, string>> edges;
     for(const string& first_vertice : vertices) {
@@ -238,7 +224,7 @@ static set<pair<string, string>> createFullEdges(set<string> vertices)
     return edges;
 }
 
-static bool isValidName(const std::string& vertice_name)
+bool Graph::isValidName(const std::string& vertice_name)
 {
     int parentheses = 0;
     for(size_t i = 0; i < vertice_name.length(); i++) {
