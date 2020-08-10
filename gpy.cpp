@@ -62,14 +62,19 @@ Graph* addEdge(Graph* graph, const char* v1, const char* v2)
 
 void disp(Graph* graph)
 {
-    try {
-        printGraph(*graph, cout);
+    if(graph == nullptr) {
+        cout << "Error: Unable to print null pointer" << endl;
     }
-    catch(const GraphException& exc) {
-        cout << exc.what() << endl;
-    }
-    catch(...) {
-        cout << "Error: Unable to print graph" << endl;
+    else {
+        try {
+            printGraph(*graph, cout);
+        }
+        catch(const GraphException& exc) {
+            cout << exc.what() << endl;
+        }
+        catch(...) {
+            cout << "Error: Unable to print graph" << endl;
+        }
     }
 }
 
