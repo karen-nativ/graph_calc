@@ -5,23 +5,26 @@
 #include <iostream>
 #include <map>
 
+namespace gcalc {
 
-Graph parseGraph(const std::string& full_graph);
+    Graph parseGraph(const std::string& full_graph);
 
-void printGraph(const Graph& G, std::ostream& output);
+    void printGraph(const Graph& G, std::ostream& output);
 
-void saveGraph(const Graph& G, const std::string& filename);
+    void saveGraph(const Graph& G, const std::string& filename);
 
-Graph loadGraph(const std::string& filename);
+    Graph loadGraph(const std::string& filename);
 
-void printAllVariables(const std::map<std::string, Graph>& variables, std::ostream& output);
+    void printAllVariables(const std::map<std::string, Graph>& variables, std::ostream& output);
 
-Graph execute(const std::string& command, std::map<std::string, Graph> variables);
+    Graph execute(const std::string& command, std::map<std::string, Graph> variables);
 
-void executeKnownCommand(const std::string& known_command, 
-    std::map<std::string, Graph>& variables, std::ostream& output);
+    void executeKnownCommand(const std::string& known_command,
+        std::map<std::string, Graph>& variables, std::ostream& output);
 
-bool readCommand(std::istream& input, std::map<std::string, Graph>& variables, std::ostream& output);
+    bool readCommand(std::istream& input, std::map<std::string, Graph>& variables, std::ostream& output);
+}
+
 
 #endif //GCALC_H
 

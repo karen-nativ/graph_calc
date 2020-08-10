@@ -1,8 +1,8 @@
 #ifndef GPY_H
 #define GPY_H
 
-#include "Graph.h"
 #include <string>
+#include "Graph.h"
 
 Graph* create();
 

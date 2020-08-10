@@ -7,6 +7,8 @@
 #include "Exceptions.h"
 #include "gcalc.h"
 
+using namespace gcalc;
+
 using std::string;
 using std::set;
 using std::pair;
@@ -29,6 +31,10 @@ const string vertice_regex = "([\\w\\[;\\]]+)";
 const string vertice_space = space_regex + vertice_regex + space_regex;
 
 static string trim(string s, const string& trim_chars = " ");
+static void writeVerticetoFile(const string& vertice, ostream& outfile);
+static string readVerticefromFile(istream& infile);
+static int getOpeningParentheses(const string& command);
+static void validateVariableName(const string& var_name, set<string>& known_commands);
 
 
 static string trim(string s, const string& trim_chars)
@@ -38,7 +44,68 @@ static string trim(string s, const string& trim_chars)
     return s;
 }
 
-Graph parseGraph(const string& full_graph)
+static void writeVerticetoFile(const string& vertice, ostream& outfile)
+{
+    unsigned int vertice_length = vertice.length();
+    outfile.write((char*)&vertice_length, sizeof(vertice_length));
+    outfile.write((char*)&vertice[0], vertice_length);
+}
+
+static string readVerticefromFile(istream& infile)
+{
+    unsigned int vertice_length;
+    infile.read((char*)&vertice_length, sizeof(vertice_length));
+    if(!infile) {
+        throw OpenFileError();
+    }
+    string vertice;
+    vertice.resize(vertice_length);
+    infile.read((char*)&vertice[0], vertice_length);
+    if(!infile) {
+        throw OpenFileError();
+    }
+    return vertice;
+}
+
+static int getOpeningParentheses(const string& command)
+{
+    int counter = 1;
+    if(command.back() == ')') {
+        for(int i = command.length() - 2; i >= 0; i--) {
+            if(command[i] == ')') {
+                counter++;
+            }
+            else if(command[i] == '(') {
+                if(counter == 1) {
+                    return i;
+                }
+                counter--;
+            }
+        }
+
+    }
+    //We have arrived to the beginning and haven't matched all parentheses, or the last character is not parentheses
+    throw SyntaxError();
+}
+
+static void validateVariableName(const string& var_name, set<string>& known_commands)
+{
+    if(!isalpha(var_name[0])) {
+        throw IllegalVariableName(var_name);
+    }
+    for(size_t i = 0; i < var_name.length(); i++) {
+        if(!isalnum(var_name[i])) {
+            throw IllegalVariableName(var_name);
+        }
+    }
+    if(known_commands.find(var_name) != known_commands.end()) {
+        //Variable name is a known command
+        throw IllegalVariableName(var_name);
+    }
+
+}
+
+Graph gcalc::parseGraph(const string& full_graph)
 {
     const string edge = "<" + vertice_space + "," + vertice_space + ">";
     const string regex_edges = "^\\{(" + vertice_space + ",)*" + vertice_space
@@ -90,7 +157,7 @@ Graph parseGraph(const string& full_graph)
     return Graph(parsed_vertices, parsed_edges);
 }
 
-void printGraph(const Graph& G, ostream& output)
+void gcalc::printGraph(const Graph& G, ostream& output)
 {
     for(const string& vertice : G.getVertices()) {
         output << vertice << endl;
@@ -101,14 +168,7 @@ void printGraph(const Graph& G, ostream& output)
     }
 }
 
-static void writeVerticetoFile(const string& vertice, ostream& outfile)
-{
-    unsigned int vertice_length = vertice.length();
-    outfile.write((char*)&vertice_length, sizeof(vertice_length));
-    outfile.write((char*)&vertice[0], vertice_length);
-}
-
-void saveGraph(const Graph& G, const string& filename)
+void gcalc::saveGraph(const Graph& G, const string& filename)
 {
     ofstream outfile(filename, std::ios_base::binary);
     if(!outfile) {
@@ -131,23 +191,7 @@ void saveGraph(const Graph& G, const string& filename)
     }
 }
 
-static string readVerticefromFile(istream& infile)
-{
-    unsigned int vertice_length;
-    infile.read((char*)&vertice_length, sizeof(vertice_length));
-    if(!infile) {
-        throw OpenFileError();
-    }
-    string vertice;
-    vertice.resize(vertice_length);
-    infile.read((char*)&vertice[0], vertice_length);
-    if(!infile) {
-        throw OpenFileError();
-    }
-    return vertice;
-}
-
-Graph loadGraph(const string& filename)
+Graph gcalc::loadGraph(const string& filename)
 {
     set<string> parsed_vertices;
     set<pair<string, string>> parsed_edges;
@@ -192,35 +236,14 @@ Graph loadGraph(const string& filename)
     return Graph(parsed_vertices, parsed_edges);
 }
 
-void printAllVariables(const map<string, Graph>& variables, ostream& output)
+void gcalc::printAllVariables(const map<string, Graph>& variables, ostream& output)
 {
     for(pair<string, Graph> variable : variables) {
         output << variable.first << endl;
     }
 }
 
-static int getOpeningParentheses(const string& command)
-{
-    int counter = 1;
-    if(command.back() == ')') {
-        for(int i = command.length() - 2; i >= 0; i--) {
-            if(command[i] == ')') {
-                counter++;
-            }
-            else if(command[i] == '(') {
-                if(counter == 1) {
-                    return i;
-                }
-                counter--;
-            }
-        }
-
-    }
-    //We have arrived to the beginning and haven't matched all parentheses, or the last character is not parentheses
-    throw SyntaxError();
-}
-
-Graph execute(const string& command, map<string, Graph> variables)
+Graph gcalc::execute(const string& command, map<string, Graph> variables)
 {
     if(command.length() == 0) {
         throw SyntaxError();
@@ -308,7 +331,7 @@ Graph execute(const string& command, map<string, Graph> variables)
     }
 }
 
-void executeKnownCommand(const string& known_command, map<string, Graph>& variables, ostream& output)
+void gcalc::executeKnownCommand(const string& known_command, map<string, Graph>& variables, ostream& output)
 {
     smatch var_match;
     if(known_command == "reset") {
@@ -344,24 +367,7 @@ void executeKnownCommand(const string& known_command, map<string, Graph>& variab
     }
 }
 
-static void ValidateVariableName(const string& var_name, set<string>& known_commands)
-{
-    if(!isalpha(var_name[0])) {
-        throw IllegalVariableName(var_name);
-    }
-    for(size_t i = 0; i < var_name.length(); i++) {
-        if(!isalnum(var_name[i])) {
-            throw IllegalVariableName(var_name);
-        }
-    }
-    if(known_commands.find(var_name) != known_commands.end()) {
-        //Variable name is a known command
-        throw IllegalVariableName(var_name);
-    }
-
-}
-
-bool readCommand(istream& input, map<string, Graph>& variables, ostream& output)
+bool gcalc::readCommand(istream& input, map<string, Graph>& variables, ostream& output)
 {
     const string exit = "quit";
     set<string> known_commands = { "reset", "who", "delete" , "print", "save", "load", exit };
@@ -383,12 +389,13 @@ bool readCommand(istream& input, map<string, Graph>& variables, ostream& output)
         //A variable is declared
         string variable = trim(command.substr(0, equals), " ");
         string value = trim(command.substr(equals + 1), " ");
-        ValidateVariableName(variable, known_commands);
+        validateVariableName(variable, known_commands);
         //If variable already exists in variables do we need to free memory??
         variables[variable] = execute(value, variables);
     }
     return false;
 }
+
 
 int main(int argc, char* argv[])
 {
